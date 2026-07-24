@@ -1,0 +1,15 @@
+# Laravel
+stage-platform-laravel/vendor/
+stage-platform-laravel/.env
+stage-platform-laravel/storage/logs/*.log
+stage-platform-laravel/node_modules/
+stage-platform-laravel/public/hot
+
+# React / Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# Système
+.DS_Store
+Thumbs.db
