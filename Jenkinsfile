@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        SONAR_TOKEN = credentials('sonarqube-token')
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -13,6 +17,13 @@ pipeline {
             steps {
                 echo 'Analyse du code à la recherche de secrets...'
                 sh 'gitleaks detect --source=. --verbose --no-git || true'
+            }
+        }
+
+        stage('Analyse qualité de code (SonarQube)') {
+            steps {
+                echo 'Analyse de la qualité du code avec SonarQube...'
+                sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN'
             }
         }
 
