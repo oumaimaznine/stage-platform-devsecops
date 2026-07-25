@@ -3,6 +3,8 @@ pipeline {
 
     environment {
         SONAR_TOKEN = credentials('sonarqube-token')
+        NEXUS_CREDS = credentials('nexus-credentials')
+        NEXUS_URL = 'localhost:8083'
     }
 
     stages {
@@ -45,6 +47,17 @@ pipeline {
             steps {
                 echo 'Analyse de l\'image Docker à la recherche de vulnérabilités...'
                 sh 'trivy image --severity HIGH,CRITICAL --no-progress stage-backend:latest || true'
+            }
+        }
+
+        stage('Push vers Nexus') {
+            steps {
+                echo 'Envoi de l\'image vers le registre Nexus...'
+                sh '''
+                    echo $NEXUS_CREDS_PSW | docker login $NEXUS_URL -u $NEXUS_CREDS_USR --password-stdin
+                    docker tag stage-backend:latest $NEXUS_URL/stage-backend:latest
+                    docker push $NEXUS_URL/stage-backend:latest
+                '''
             }
         }
 
