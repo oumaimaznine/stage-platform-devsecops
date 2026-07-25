@@ -27,6 +27,13 @@ pipeline {
             }
         }
 
+        stage('Analyse des dépendances (OWASP Dependency-Check)') {
+            steps {
+                echo 'Analyse des dépendances à la recherche de vulnérabilités connues...'
+                sh 'dependency-check --project stage-platform --scan ./stage-platform-laravel/composer.json --scan ./frontend/package.json --format HTML --out dependency-check-report || true'
+            }
+        }
+
         stage('Build image Backend') {
             steps {
                 echo 'Construction de l\'image Docker du backend...'
@@ -45,6 +52,12 @@ pipeline {
             steps {
                 echo 'Pipeline terminé avec succès !'
             }
+        }
+    }
+
+    post {
+        always {
+            archiveArtifacts artifacts: 'dependency-check-report/**', allowEmptyArchive: true
         }
     }
 }
