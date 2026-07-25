@@ -27,17 +27,39 @@ pipeline {
             }
         }
 
-        stage('Analyse des dépendances (OWASP Dependency-Check)') {
-            steps {
-                echo 'Analyse des dépendances à la recherche de vulnérabilités connues...'
-                sh 'dependency-check --project stage-platform --scan ./stage-platform-laravel/composer.json --scan ./frontend/package.json --format HTML --out dependency-check-report || true'
-            }
-        }
-
         stage('Build image Backend') {
             steps {
                 echo 'Construction de l\'image Docker du backend...'
                 sh 'docker build -t stage-backend:latest ./stage-platform-laravel'
+            }
+        }
+
+        stage('Build image Frontend') {
+            steps {
+                echo 'Construction de l\'image Docker du frontend...'
+                sh 'docker build -t stage-frontend:latest ./frontend'
+            }
+        }
+
+        stage('Extraction des dépendances') {
+            steps {
+                echo 'Extraction de vendor/ et node_modules/ depuis les images...'
+                sh '''
+                    docker create --name temp-backend stage-backend:latest
+                    docker cp temp-backend:/var/www/vendor ./stage-platform-laravel/vendor || true
+                    docker rm temp-backend
+
+                    docker create --name temp-frontend stage-frontend:latest
+                    docker cp temp-frontend:/app/node_modules ./frontend/node_modules || true
+                    docker rm temp-frontend
+                '''
+            }
+        }
+
+        stage('Analyse des dépendances (OWASP Dependency-Check)') {
+            steps {
+                echo 'Analyse des dépendances à la recherche de vulnérabilités connues...'
+                sh 'dependency-check --project stage-platform --scan ./stage-platform-laravel/vendor --scan ./frontend/node_modules --format HTML --out dependency-check-report || true'
             }
         }
 
