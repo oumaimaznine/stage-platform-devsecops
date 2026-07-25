@@ -9,7 +9,7 @@ RUN apt-get update && apt-get install -y \
     libpng-dev \
     && docker-php-ext-install pdo pdo_mysql zip gd
 
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
 COPY . .
 
