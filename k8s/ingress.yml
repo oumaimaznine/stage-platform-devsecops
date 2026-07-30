@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: stage-platform-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: stage-platform.local
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: stage-backend-service
+                port:
+                  number: 9000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: stage-frontend-service
+                port:
+                  number: 5173
