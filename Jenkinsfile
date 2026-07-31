@@ -35,7 +35,8 @@ pipeline {
                         --format HTML --format JSON \
                         --out dependency-check-report \
                         --failOnCVSS 9 \
-                        --nvdApiKey $NVD_API_KEY
+                        --nvdApiKey $NVD_API_KEY \
+                        --disableOssIndex true
                 '''
             }
         }
