@@ -46,21 +46,36 @@ pipeline {
                 sh 'docker build -t stage-backend:latest ./stage-platform-laravel'
             }
         }
+        stage('Build image Frontend') {
+            steps {
+                echo 'Construction de l\'image Docker du frontend...'
+                sh 'docker build -t stage-frontend:latest ./frontend'
+            }
+        }
         stage('Scan de vulnerabilites (Trivy)') {
             steps {
-                echo 'Analyse complete HIGH et CRITICAL, sans bloquer...'
+                echo 'Analyse complete HIGH et CRITICAL (Backend), sans bloquer...'
                 sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-backend:latest || true'
-                echo 'Verification stricte: blocage si vulnerabilite CRITICAL...'
-                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore stage-backend:latest'
+                echo 'Verification stricte Backend: blocage si vulnerabilite CRITICAL...'
+                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-backend stage-backend:latest'
+
+                echo 'Analyse complete HIGH et CRITICAL (Frontend), sans bloquer...'
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-frontend:latest || true'
+                echo 'Verification stricte Frontend: blocage si vulnerabilite CRITICAL...'
+                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-frontend stage-frontend:latest'
             }
         }
         stage('Push vers Nexus') {
             steps {
-                echo 'Envoi de l\'image vers le registre Nexus...'
+                echo 'Envoi des images vers le registre Nexus...'
                 sh '''
                     echo $NEXUS_CREDS_PSW | docker login $NEXUS_URL -u $NEXUS_CREDS_USR --password-stdin
+
                     docker tag stage-backend:latest $NEXUS_URL/stage-backend:latest
                     docker push $NEXUS_URL/stage-backend:latest
+
+                    docker tag stage-frontend:latest $NEXUS_URL/stage-frontend:latest
+                    docker push $NEXUS_URL/stage-frontend:latest
                 '''
             }
         }
