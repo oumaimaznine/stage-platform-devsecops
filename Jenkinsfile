@@ -22,7 +22,17 @@ pipeline {
         stage('Analyse qualite de code (SonarQube)') {
             steps {
                 echo 'Analyse de la qualite du code avec SonarQube...'
-                sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN'
+                withSonarQubeEnv('SonarQube') {
+                    sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN'
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                echo 'Attente du resultat du Quality Gate SonarQube...'
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
         stage('Analyse des dependances (OWASP Dependency-Check)') {
