@@ -1,0 +1,27 @@
+---
+- name: Déploiement de Stage Platform
+  hosts: local
+  become: false
+  tasks:
+    - name: Vérifier que Docker est installé
+      command: docker --version
+      register: docker_version
+      changed_when: false
+    - name: Afficher la version de Docker
+      debug:
+        msg: "Docker détecté : {{ docker_version.stdout }}"
+    - name: Se connecter au registre Nexus
+      command: >
+        docker login localhost:8083 -u admin -p {{ nexus_password }}
+      changed_when: false
+      no_log: true
+    - name: Tirer la dernière image backend depuis Nexus
+      command: docker pull localhost:8083/stage-backend:latest
+      register: pull_result
+    - name: Afficher le résultat du pull
+      debug:
+        msg: "{{ pull_result.stdout }}"
+    - name: Redémarrer le conteneur backend avec la nouvelle image
+      command: docker compose -p stageplatform up -d --force-recreate backend
+      args:
+        chdir: /workspace

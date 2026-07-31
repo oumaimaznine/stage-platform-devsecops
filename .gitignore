@@ -13,7 +13,6 @@ frontend/.env
 # Système
 .DS_Store
 Thumbs.db
-ansible/deploy.yml
 k8s/mysql-secret.yml
 kubectl
 k8s/backend-configmap.yml
