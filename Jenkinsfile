@@ -4,6 +4,7 @@ pipeline {
         SONAR_TOKEN = credentials('sonarqube-token')
         NEXUS_CREDS = credentials('nexus-credentials')
         NEXUS_URL = 'localhost:8083'
+        NVD_API_KEY = credentials('NVD_API_KEY')
     }
     stages {
         stage('Checkout') {
@@ -33,7 +34,8 @@ pipeline {
                         --scan ./frontend/package-lock.json \
                         --format HTML --format JSON \
                         --out dependency-check-report \
-                        --failOnCVSS 9
+                        --failOnCVSS 9 \
+                        --nvdApiKey $NVD_API_KEY
                 '''
             }
         }
