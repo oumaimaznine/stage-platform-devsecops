@@ -51,7 +51,7 @@ pipeline {
                 echo 'Analyse complete HIGH et CRITICAL, sans bloquer...'
                 sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-backend:latest || true'
                 echo 'Verification stricte: blocage si vulnerabilite CRITICAL...'
-                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m stage-backend:latest'
+                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore stage-backend:latest'
             }
         }
         stage('Push vers Nexus') {
