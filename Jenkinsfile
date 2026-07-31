@@ -15,7 +15,7 @@ pipeline {
         stage('Scan des secrets (Gitleaks)') {
             steps {
                 echo 'Analyse du code a la recherche de secrets...'
-                sh 'gitleaks detect --source=. --verbose --no-git'
+                sh 'gitleaks detect --source=. --verbose --no-git -i .gitleaksignore'
             }
         }
         stage('Analyse qualite de code (SonarQube)') {
@@ -47,7 +47,6 @@ pipeline {
             steps {
                 echo 'Analyse complete HIGH et CRITICAL, sans bloquer...'
                 sh 'trivy image --severity HIGH,CRITICAL --no-progress stage-backend:latest || true'
-
                 echo 'Verification stricte: blocage si vulnerabilite CRITICAL...'
                 sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress stage-backend:latest'
             }

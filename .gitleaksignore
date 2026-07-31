@@ -1,0 +1,2 @@
+stage-platform-laravel/vendor/**
+frontend/node_modules/**
