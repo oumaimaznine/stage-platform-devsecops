@@ -15,7 +15,7 @@ pipeline {
         stage('Scan des secrets (Gitleaks)') {
             steps {
                 echo 'Analyse du code a la recherche de secrets...'
-                sh 'gitleaks detect --source=. --verbose --no-git -i .gitleaksignore'
+                sh 'gitleaks detect --source=. --verbose --no-git --config .gitleaks.toml'
             }
         }
         stage('Analyse qualite de code (SonarQube)') {

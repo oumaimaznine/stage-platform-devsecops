@@ -1,0 +1,5 @@
+[allowlist]
+  paths = [
+    '''stage-platform-laravel/vendor/.*''',
+    '''frontend/node_modules/.*'''
+  ]
