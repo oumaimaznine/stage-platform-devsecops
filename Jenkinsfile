@@ -89,6 +89,17 @@ pipeline {
                 '''
             }
         }
+        stage('Deploiement Kubernetes') {
+            steps {
+                echo 'Mise a jour des images sur le cluster Kubernetes...'
+                sh '''
+                    kubectl --kubeconfig=/var/jenkins_home/.kube-config set image deployment/stage-backend stage-backend=localhost:8083/stage-backend:latest -n default
+                    kubectl --kubeconfig=/var/jenkins_home/.kube-config set image deployment/stage-frontend stage-frontend=localhost:8083/stage-frontend:latest -n default
+                    kubectl --kubeconfig=/var/jenkins_home/.kube-config rollout status deployment/stage-backend -n default --timeout=120s
+                    kubectl --kubeconfig=/var/jenkins_home/.kube-config rollout status deployment/stage-frontend -n default --timeout=120s
+                '''
+            }
+        }
         stage('Verification') {
             steps {
                 echo 'Pipeline termine avec succes !'
