@@ -7,9 +7,12 @@ export default defineConfig({
     port: 5173,
     host: true,
     allowedHosts: ["stage-platform.local", "localhost"],
+    watch: {
+      usePolling: true,
+    },
     proxy: {
       "/api": {
-        target: "http://localhost:8000",
+        target: "http://nginx:80",
         changeOrigin: true,
       },
     },

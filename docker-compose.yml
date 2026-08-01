@@ -27,6 +27,8 @@ services:
     restart: unless-stopped
     volumes:
       - ./stage-platform-laravel:/var/www
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - mysql
   nginx:
@@ -105,7 +107,7 @@ services:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin123
     ports:
-      - "8180:8080"
+      - "8080:8080"
     command: start-dev
   prometheus:
     image: prom/prometheus:latest
