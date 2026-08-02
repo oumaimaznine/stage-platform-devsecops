@@ -67,12 +67,10 @@ class AuthController extends Controller
     {
         return Socialite::driver('keycloak')->redirect();
     }
-    public function handleKeycloakCallback(Request $request)
+    public function handleKeycloakCallback()
     {
         $keycloakUser = Socialite::driver('keycloak')->user();
-
         $user = User::where('email', $keycloakUser->getEmail())->first();
-
         if (!$user) {
             $user = User::create([
                 'name' => $keycloakUser->getName() ?? $keycloakUser->getNickname() ?? $keycloakUser->getEmail(),
@@ -87,9 +85,7 @@ class AuthController extends Controller
                 'niveau' => '',
             ]);
         }
-
         $token = $user->createToken('api-token')->plainTextToken;
-
         $frontendUrl = 'http://stage-platform.local:5173/auth/callback';
         return redirect()->away($frontendUrl . '?token=' . $token);
     }
