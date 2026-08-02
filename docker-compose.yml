@@ -55,7 +55,8 @@ services:
     depends_on:
       - nginx
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: ./jenkins/custom-image
     container_name: stage_jenkins
     restart: unless-stopped
     user: root
