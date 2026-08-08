@@ -1,0 +1,22 @@
+name: Build and Push Backend to ACR
+on:
+  workflow_dispatch:
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Log in to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: acrpfeoumaima.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./stage-platform-laravel
+          file: ./stage-platform-laravel/Dockerfile.azure
+          push: true
+          tags: acrpfeoumaima.azurecr.io/stage-backend:latest
