@@ -38,6 +38,7 @@ pipeline {
             steps {
                 echo 'Analyse des dependances a la recherche de vulnerabilites connues...'
                 sh '''
+                    mkdir -p dependency-check-report
                     dependency-check --project stage-platform \
                         --scan ./stage-platform-laravel/composer.lock \
                         --scan ./frontend/package-lock.json \
@@ -58,7 +59,7 @@ pipeline {
         stage('Build image Frontend') {
             steps {
                 echo 'Construction de l\'image Docker du frontend...'
-                sh 'docker build -t stage-frontend:latest ./frontend'
+                sh 'docker build -f ./frontend/Dockerfile.azure -t stage-frontend:latest ./frontend'
             }
         }
         stage('Scan de vulnerabilites (Trivy)') {
