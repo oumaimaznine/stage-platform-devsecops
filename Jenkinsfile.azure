@@ -65,14 +65,14 @@ pipeline {
         stage('Scan de vulnerabilites (Trivy)') {
             steps {
                 echo 'Analyse complete HIGH et CRITICAL (Backend), sans bloquer...'
-                sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-backend:latest || true'
+                sh 'trivy image --cache-dir /tmp/trivy-azure-cache --severity HIGH,CRITICAL --no-progress --timeout 15m stage-backend:latest || true'
                 echo 'Verification stricte Backend: blocage si vulnerabilite CRITICAL...'
-                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-backend stage-backend:latest'
+                sh 'trivy image --cache-dir /tmp/trivy-azure-cache --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-backend stage-backend:latest'
 
                 echo 'Analyse complete HIGH et CRITICAL (Frontend), sans bloquer...'
-                sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-frontend:latest || true'
+                sh 'trivy image --cache-dir /tmp/trivy-azure-cache --severity HIGH,CRITICAL --no-progress --timeout 15m stage-frontend:latest || true'
                 echo 'Verification stricte Frontend: blocage si vulnerabilite CRITICAL...'
-                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-frontend stage-frontend:latest'
+                sh 'trivy image --cache-dir /tmp/trivy-azure-cache --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-frontend stage-frontend:latest'
             }
         }
         stage('Push vers ACR (Azure)') {
