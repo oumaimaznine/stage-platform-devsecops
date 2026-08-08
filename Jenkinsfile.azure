@@ -1,0 +1,120 @@
+pipeline {
+    agent any
+    environment {
+        SONAR_TOKEN = credentials('sonarqube-token')
+        NVD_API_KEY = credentials('NVD_API_KEY')
+        ACR_URL = 'acrpfeoumaima.azurecr.io'
+    }
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Recuperation du code depuis GitHub...'
+                checkout scm
+            }
+        }
+        stage('Scan des secrets (Gitleaks)') {
+            steps {
+                echo 'Analyse du code a la recherche de secrets...'
+                sh 'gitleaks detect --source=. --verbose --no-git --config .gitleaks.toml'
+            }
+        }
+        stage('Analyse qualite de code (SonarQube)') {
+            steps {
+                echo 'Analyse de la qualite du code avec SonarQube...'
+                withSonarQubeEnv('SonarQube') {
+                    sh 'sonar-scanner -Dsonar.token=$SONAR_TOKEN'
+                }
+            }
+        }
+        stage('Quality Gate') {
+            steps {
+                echo 'Attente du resultat du Quality Gate SonarQube...'
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        stage('Analyse des dependances (OWASP Dependency-Check)') {
+            steps {
+                echo 'Analyse des dependances a la recherche de vulnerabilites connues...'
+                sh '''
+                    dependency-check --project stage-platform \
+                        --scan ./stage-platform-laravel/composer.lock \
+                        --scan ./frontend/package-lock.json \
+                        --format HTML --format JSON \
+                        --out dependency-check-report \
+                        --failOnCVSS 9 \
+                        --nvdApiKey $NVD_API_KEY \
+                        --disableOssIndex true
+                '''
+            }
+        }
+        stage('Build image Backend') {
+            steps {
+                echo 'Construction de l\'image Docker du backend (Azure)...'
+                sh 'docker build -f ./stage-platform-laravel/Dockerfile.azure -t stage-backend:latest ./stage-platform-laravel'
+            }
+        }
+        stage('Build image Frontend') {
+            steps {
+                echo 'Construction de l\'image Docker du frontend...'
+                sh 'docker build -t stage-frontend:latest ./frontend'
+            }
+        }
+        stage('Scan de vulnerabilites (Trivy)') {
+            steps {
+                echo 'Analyse complete HIGH et CRITICAL (Backend), sans bloquer...'
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-backend:latest || true'
+                echo 'Verification stricte Backend: blocage si vulnerabilite CRITICAL...'
+                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-backend stage-backend:latest'
+
+                echo 'Analyse complete HIGH et CRITICAL (Frontend), sans bloquer...'
+                sh 'trivy image --severity HIGH,CRITICAL --no-progress --timeout 15m stage-frontend:latest || true'
+                echo 'Verification stricte Frontend: blocage si vulnerabilite CRITICAL...'
+                sh 'trivy image --severity CRITICAL --exit-code 1 --no-progress --timeout 15m --ignorefile .trivyignore-frontend stage-frontend:latest'
+            }
+        }
+        stage('Push vers ACR (Azure)') {
+            steps {
+                echo 'Envoi des images vers Azure Container Registry...'
+                withCredentials([usernamePassword(credentialsId: 'acr-credentials', usernameVariable: 'ACR_USER', passwordVariable: 'ACR_PASS')]) {
+                    sh '''
+                        echo $ACR_PASS | docker login $ACR_URL -u $ACR_USER --password-stdin
+
+                        docker tag stage-backend:latest $ACR_URL/stage-backend:latest
+                        docker push $ACR_URL/stage-backend:latest
+
+                        docker tag stage-frontend:latest $ACR_URL/stageplatform-frontend:latest
+                        docker push $ACR_URL/stageplatform-frontend:latest
+                    '''
+                }
+            }
+        }
+        stage('Deploiement AKS') {
+            steps {
+                echo 'Mise a jour des images sur le cluster AKS...'
+                withCredentials([file(credentialsId: 'aks-kubeconfig', variable: 'AKS_KUBECONFIG')]) {
+                    sh '''
+                        kubectl --kubeconfig=$AKS_KUBECONFIG set image deployment/stage-backend stage-backend=acrpfeoumaima.azurecr.io/stage-backend:latest -n default
+                        kubectl --kubeconfig=$AKS_KUBECONFIG set image deployment/stage-frontend stage-frontend=acrpfeoumaima.azurecr.io/stageplatform-frontend:latest -n default
+                        kubectl --kubeconfig=$AKS_KUBECONFIG rollout status deployment/stage-backend -n default --timeout=120s
+                        kubectl --kubeconfig=$AKS_KUBECONFIG rollout status deployment/stage-frontend -n default --timeout=120s
+                    '''
+                }
+            }
+        }
+        stage('Verification') {
+            steps {
+                echo 'Pipeline Azure termine avec succes !'
+            }
+        }
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'dependency-check-report/**', allowEmptyArchive: true
+        }
+        failure {
+            echo 'Le pipeline Azure a echoue - verifier les resultats de securite (Gitleaks, Dependency-Check ou Trivy).'
+        }
+    }
+}
