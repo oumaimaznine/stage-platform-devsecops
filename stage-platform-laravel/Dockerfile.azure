@@ -11,5 +11,6 @@ COPY . .
 RUN touch .env
 RUN composer install --no-dev --optimize-autoloader
 RUN chmod -R 775 storage bootstrap/cache
+RUN echo "listen = 0.0.0.0:9000" >> /usr/local/etc/php-fpm.d/zz-docker.conf
 EXPOSE 9000
 CMD ["php-fpm"]
