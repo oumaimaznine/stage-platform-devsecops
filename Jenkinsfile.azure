@@ -83,10 +83,21 @@ pipeline {
                         echo $ACR_PASS | docker login $ACR_URL -u $ACR_USER --password-stdin
 
                         docker tag stage-backend:latest $ACR_URL/stage-backend:latest
-                        docker push $ACR_URL/stage-backend:latest
-
                         docker tag stage-frontend:latest $ACR_URL/stageplatform-frontend:latest
-                        docker push $ACR_URL/stageplatform-frontend:latest
+
+                        for i in 1 2 3 4 5; do
+                            echo "Tentative de push backend numero $i..."
+                            docker push $ACR_URL/stage-backend:latest && break
+                            echo "Echec, nouvelle tentative dans 10 secondes..."
+                            sleep 10
+                        done
+
+                        for i in 1 2 3 4 5; do
+                            echo "Tentative de push frontend numero $i..."
+                            docker push $ACR_URL/stageplatform-frontend:latest && break
+                            echo "Echec, nouvelle tentative dans 10 secondes..."
+                            sleep 10
+                        done
                     '''
                 }
             }
