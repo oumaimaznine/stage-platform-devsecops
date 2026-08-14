@@ -18,11 +18,7 @@ const SIZES = {
   lg: "w-14 h-14 text-lg",
 };
 
-/**
- * Avatar généré à partir des initiales d'un nom (utilisateur ou entreprise),
- * avec une couleur stable basée sur le texte — pas besoin d'upload de photo.
- */
-export default function Avatar({ name = "", size = "md", square = false, className = "" }) {
+export default function Avatar({ name = "", src = null, size = "md", square = false, className = "" }) {
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -31,11 +27,21 @@ export default function Avatar({ name = "", size = "md", square = false, classNa
     .join("")
     .toUpperCase();
 
+  const shape = square ? "rounded-xl" : "rounded-full";
+
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name || "Avatar"}
+        className={`object-cover shrink-0 ${shape} ${SIZES[size]} ${className}`}
+      />
+    );
+  }
+
   return (
     <div
-      className={`flex items-center justify-center font-semibold shrink-0 ${
-        square ? "rounded-xl" : "rounded-full"
-      } ${SIZES[size]} ${hashColor(name)} ${className}`}
+      className={`flex items-center justify-center font-semibold shrink-0 ${shape} ${SIZES[size]} ${hashColor(name)} ${className}`}
     >
       {initials || "?"}
     </div>

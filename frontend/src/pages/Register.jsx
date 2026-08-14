@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
@@ -13,19 +13,26 @@ export default function Register() {
     niveau: "",
     nom_entreprise: "",
   });
+
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [animating, setAnimating] = useState(false);
+
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setSubmitting(true);
+
     try {
       await register(form);
       navigate("/dashboard");
@@ -34,194 +41,445 @@ export default function Register() {
         err.response?.data?.message ||
         Object.values(err.response?.data?.errors || {})[0]?.[0] ||
         "Erreur lors de l'inscription";
+
       setError(message);
     } finally {
       setSubmitting(false);
     }
   };
 
+  const goToLogin = () => {
+    setAnimating(true);
+
+    setTimeout(() => {
+      navigate("/login");
+    }, 650);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <header className="border-b border-ink-800 bg-white/95 backdrop-blur sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center gap-3">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-sm shrink-0">
-              GS
-            </div>
-            <span className="font-semibold text-ink-100 text-sm">Gestion des stages</span>
-          </Link>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-4">
 
-      <main className="flex-1 grid lg:grid-cols-2">
-        {/* Colonne gauche : formulaire */}
-        <div className="flex items-center justify-center py-10 px-4 bg-ink-50/60">
-          <form
-            onSubmit={handleSubmit}
-            className="max-w-md w-full space-y-4 bg-white border border-ink-800 p-8 rounded-xl shadow-card"
-          >
-            <h1 className="text-xl font-bold text-center text-ink-100">Inscription</h1>
+      <div
+        className={`
+          relative
+          w-full
+          max-w-[850px]
+          min-h-[500px]
+          bg-white
+          rounded-[25px]
+          overflow-hidden
+          shadow-[0_12px_35px_rgba(0,0,0,0.10)]
+          flex
+          transition-all
+          duration-700
+          ${animating ? "scale-[0.98]" : "scale-100"}
+        `}
+      >
+
+        {/* =====================================================
+            REGISTER FORM
+        ====================================================== */}
+        <div
+          className={`
+            absolute
+            top-0
+            h-full
+            w-[55%]
+            flex
+            items-center
+            justify-center
+            bg-white
+            px-10
+            py-7
+            z-10
+            transition-all
+            duration-700
+            ease-in-out
+            ${animating ? "left-[100%] opacity-0" : "left-0 opacity-100"}
+          `}
+        >
+
+          <div className="w-full max-w-[350px]">
+
+            <h2 className="text-center text-[30px] font-bold text-[#111827] mb-4">
+              Register
+            </h2>
+
             {error && (
-              <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg p-2">{error}</p>
+              <div className="mb-3 px-3 py-2 rounded-md bg-red-50 border border-red-200 text-red-600 text-[12px]">
+                {error}
+              </div>
             )}
 
-            <div>
-              <label className="text-sm text-ink-300">Je suis</label>
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg mt-1 text-ink-100 text-sm"
+            <form onSubmit={handleSubmit}>
+
+              {/* ROLE */}
+              <div className="relative mb-3">
+
+                <select
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                  className="
+                    w-full
+                    h-[42px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    text-[13px]
+                    text-[#333]
+                    appearance-none
+                    cursor-pointer
+                  "
+                >
+                  <option value="etudiant">
+                    Étudiant
+                  </option>
+
+                  <option value="entreprise">
+                    Entreprise
+                  </option>
+                </select>
+
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#555] pointer-events-none">
+                  ▼
+                </div>
+
+              </div>
+
+              {/* NOM */}
+              <div className="relative mb-3">
+
+                <input
+                  name="name"
+                  placeholder="Nom complet"
+                  value={form.name}
+                  onChange={handleChange}
+                  required
+                  className="
+                    w-full
+                    h-[42px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    pr-11
+                    text-[13px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                  "
+                />
+
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#222]">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5Z" />
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* EMAIL */}
+              <div className="relative mb-3">
+
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={handleChange}
+                  required
+                  className="
+                    w-full
+                    h-[42px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    pr-11
+                    text-[13px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                  "
+                />
+
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#222]">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z" />
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* PASSWORD */}
+              <div className="relative mb-3">
+
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Mot de passe"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  className="
+                    w-full
+                    h-[42px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    pr-11
+                    text-[13px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                  "
+                />
+
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#222]">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2Zm-5 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2ZM10 8V6a2 2 0 1 1 4 0v2h-4Z" />
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* CONFIRM PASSWORD */}
+              <div className="relative mb-3">
+
+                <input
+                  type="password"
+                  name="password_confirmation"
+                  placeholder="Confirmer le mot de passe"
+                  value={form.password_confirmation}
+                  onChange={handleChange}
+                  required
+                  className="
+                    w-full
+                    h-[42px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    pr-11
+                    text-[13px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                  "
+                />
+
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#222]">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 17a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm6-6h-1V8a5 5 0 0 0-10 0v3H6c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7c0-1.1-.9-2-2-2Zm-9-3a3 3 0 1 1 6 0v3H9V8Z" />
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* ETUDIANT */}
+              {form.role === "etudiant" && (
+                <div className="grid grid-cols-2 gap-3">
+
+                  <input
+                    name="filiere"
+                    placeholder="Filière"
+                    value={form.filiere}
+                    onChange={handleChange}
+                    className="
+                      w-full
+                      h-[42px]
+                      bg-[#eeeeee]
+                      border-none
+                      outline-none
+                      px-4
+                      text-[13px]
+                      text-[#333]
+                      placeholder-[#999]
+                      focus:bg-[#e8e8e8]
+                    "
+                  />
+
+                  <input
+                    name="niveau"
+                    placeholder="Niveau"
+                    value={form.niveau}
+                    onChange={handleChange}
+                    className="
+                      w-full
+                      h-[42px]
+                      bg-[#eeeeee]
+                      border-none
+                      outline-none
+                      px-4
+                      text-[13px]
+                      text-[#333]
+                      placeholder-[#999]
+                      focus:bg-[#e8e8e8]
+                    "
+                  />
+
+                </div>
+              )}
+
+              {/* ENTREPRISE */}
+              {form.role === "entreprise" && (
+                <input
+                  name="nom_entreprise"
+                  placeholder="Nom de l'entreprise"
+                  value={form.nom_entreprise}
+                  onChange={handleChange}
+                  className="
+                    w-full
+                    h-[42px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    text-[13px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                  "
+                />
+              )}
+
+              {/* BUTTON */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="
+                  w-full
+                  h-[44px]
+                  mt-4
+                  rounded-full
+                  bg-gradient-to-r
+                  from-[#123f4b]
+                  via-[#08aebe]
+                  to-[#0bc7d5]
+                  text-white
+                  font-semibold
+                  text-[14px]
+                  shadow-[0_4px_12px_rgba(0,0,0,0.12)]
+                  hover:scale-[1.01]
+                  transition-all
+                  duration-300
+                  disabled:opacity-60
+                  disabled:cursor-not-allowed
+                "
               >
-                <option value="etudiant">Étudiant</option>
-                <option value="entreprise">Entreprise</option>
-              </select>
-            </div>
+                {submitting ? "Création..." : "Register"}
+              </button>
 
-            <input
-              name="name"
-              placeholder="Nom complet"
-              value={form.name}
-              onChange={handleChange}
-              className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Mot de passe"
-              value={form.password}
-              onChange={handleChange}
-              className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-              required
-            />
-            <input
-              type="password"
-              name="password_confirmation"
-              placeholder="Confirmer le mot de passe"
-              value={form.password_confirmation}
-              onChange={handleChange}
-              className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-              required
-            />
+            </form>
 
-            {form.role === "etudiant" && (
-              <>
-                <input
-                  name="filiere"
-                  placeholder="Filière"
-                  value={form.filiere}
-                  onChange={handleChange}
-                  className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-                />
-                <input
-                  name="niveau"
-                  placeholder="Niveau"
-                  value={form.niveau}
-                  onChange={handleChange}
-                  className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-                />
-              </>
-            )}
-
-            {form.role === "entreprise" && (
-              <input
-                name="nom_entreprise"
-                placeholder="Nom de l'entreprise"
-                value={form.nom_entreprise}
-                onChange={handleChange}
-                className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm"
-              />
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 w-full rounded-lg font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed transition"
-            >
-              {submitting ? "Création..." : "S'inscrire"}
-            </button>
-
-            <p className="text-sm text-center text-ink-300">
-              Déjà un compte ?{" "}
-              <Link to="/login" className="text-primary-700 hover:text-primary-800 underline">
-                Se connecter
-              </Link>
-            </p>
-          </form>
-        </div>
-
-        {/* Colonne droite : aperçu illustré du site */}
-        <div className="hidden lg:flex items-center justify-center bg-gradient-to-br from-primary-500/5 via-white to-ink-50 p-10 border-l border-ink-800 relative overflow-hidden">
-          <div className="absolute -top-24 -right-24 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-10 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-
-          <div className="relative w-full max-w-md space-y-4">
-            <div className="text-center mb-6">
-              <h2 className="text-ink-100 text-2xl font-bold">Gère tes stages simplement</h2>
-              <p className="text-ink-500 text-sm mt-2">
-                Offres, candidatures, conventions et rapports au même endroit.
-              </p>
-            </div>
-
-            {/* Mockup du dashboard */}
-            <div className="bg-white border border-ink-800 rounded-xl shadow-card p-5 space-y-4">
-              <div className="flex gap-3">
-                <div className="flex-1 bg-ink-50 border border-ink-800 rounded-lg p-3">
-                  <p className="text-2xl font-bold text-ink-100">12</p>
-                  <p className="text-xs text-ink-500">Candidatures</p>
-                </div>
-                <div className="flex-1 bg-ink-50 border border-ink-800 rounded-lg p-3">
-                  <p className="text-2xl font-bold text-ink-100">4</p>
-                  <p className="text-xs text-ink-500">Acceptées</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-16 rounded-full border-4 border-primary-500 flex items-center justify-center text-primary-700 font-bold text-sm shrink-0">
-                  70%
-                </div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-2 bg-primary-500/70 rounded-full w-4/5" />
-                  <div className="h-2 bg-ink-800 rounded-full w-3/5" />
-                  <div className="h-2 bg-ink-800 rounded-full w-2/5" />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 bg-ink-50 border border-ink-800 rounded-lg p-2.5">
-                <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                  TC
-                </div>
-                <div className="flex-1">
-                  <div className="h-2 bg-ink-700 rounded-full w-3/4 mb-1.5" />
-                  <div className="h-2 bg-ink-800 rounded-full w-1/2" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary-500" />
-              <span className="w-2 h-2 rounded-full bg-ink-800" />
-              <span className="w-2 h-2 rounded-full bg-ink-800" />
-            </div>
           </div>
         </div>
-      </main>
 
-      <footer className="border-t border-ink-800 py-5 bg-white">
-        <div className="max-w-7xl mx-auto px-6 text-center text-xs text-ink-500">
-          © {new Date().getFullYear()} Gestion des stages. Tous droits réservés.
+        {/* =====================================================
+            TURQUOISE PANEL
+        ====================================================== */}
+        <div
+          className={`
+            absolute
+            top-0
+            h-full
+            w-[45%]
+            flex
+            items-center
+            justify-center
+            overflow-hidden
+            bg-gradient-to-br
+            from-[#11c7d7]
+            to-[#08b7c9]
+            text-white
+            z-20
+            transition-all
+            duration-700
+            ease-in-out
+            ${animating ? "left-0" : "left-[55%]"}
+          `}
+          style={{
+            borderTopLeftRadius: "150px",
+            borderBottomLeftRadius: "150px",
+          }}
+        >
+
+          <div
+            className="
+              absolute
+              -right-[150px]
+              -top-[100px]
+              w-[400px]
+              h-[400px]
+              rounded-full
+              bg-[#0bc2d1]
+              opacity-60
+            "
+          />
+
+          <div
+            className="
+              absolute
+              -right-[100px]
+              -bottom-[130px]
+              w-[350px]
+              h-[350px]
+              rounded-full
+              bg-[#10cbd8]
+              opacity-50
+            "
+          />
+
+          <div
+            className={`
+              relative
+              z-10
+              text-center
+              px-6
+              transition-all
+              duration-500
+              ${animating ? "opacity-0 scale-90" : "opacity-100 scale-100"}
+            `}
+          >
+
+            <h1 className="text-[30px] font-bold tracking-tight mb-2">
+              Welcome Back!
+            </h1>
+
+            <p className="text-[13px] text-white/95 mb-5">
+              Already have an Account?
+            </p>
+
+            <button
+              onClick={goToLogin}
+              className="
+                inline-flex
+                items-center
+                justify-center
+                px-8
+                py-2.5
+                rounded-full
+                border-2
+                border-white
+                text-white
+                font-semibold
+                text-[13px]
+                hover:bg-white
+                hover:text-[#08b7c9]
+                transition-all
+                duration-300
+              "
+            >
+              Login
+            </button>
+
+          </div>
         </div>
-      </footer>
+
+      </div>
     </div>
   );
 }

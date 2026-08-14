@@ -1,121 +1,350 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
+import Avatar from "../components/ui/Avatar";
 
-const STATUT_LABELS = { en_attente: "En attente", acceptee: "Acceptée", refusee: "Refusée" };
-const STATUT_COLORS = {
-  en_attente: "bg-amber-500/15 text-amber-600",
-  acceptee: "bg-green-500/15 text-green-600",
-  refusee: "bg-red-500/15 text-red-600",
+/* =========================================================
+   STATUTS
+========================================================= */
+
+const STATUT_LABELS = {
+  en_attente: "En attente",
+  acceptee: "Acceptée",
+  refusee: "Refusée",
 };
 
-function InfoField({ label, value, color = "purple" }) {
-  const colors = {
-    purple: "bg-purple-50 border-purple-100 text-purple-900",
-    blue: "bg-blue-50 border-blue-100 text-blue-900",
-    green: "bg-green-50 border-green-100 text-green-900",
-    amber: "bg-amber-50 border-amber-100 text-amber-900",
-  };
+const STATUT_BADGE = {
+  en_attente:
+    "bg-[#EAFBFC] text-[#08B7C9] ring-1 ring-inset ring-[#c9e9ec]",
+
+  acceptee:
+    "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200",
+
+  refusee:
+    "bg-rose-50 text-rose-600 ring-1 ring-inset ring-rose-200",
+};
+
+const STATUT_BAR = {
+  en_attente: "bg-[#08B7C9]",
+  acceptee: "bg-emerald-500",
+  refusee: "bg-rose-500",
+};
+
+/* =========================================================
+   ICONS
+========================================================= */
+
+const Icon = {
+  search: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" strokeLinecap="round" />
+    </svg>
+  ),
+
+  eye: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  ),
+
+  check: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        d="M20 6L9 17l-5-5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+
+  x: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        d="M18 6L6 18M6 6l12 12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+
+  file: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M14 2v6h6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+
+  mail: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="M2 7l10 6 10-6" strokeLinecap="round" />
+    </svg>
+  ),
+
+  phone: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        d="M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.3 1.8.6 2.7a2 2 0 01-.4 2.1L8.1 9.6a16 16 0 006.3 6.3l1.1-1.2a2 2 0 012.1-.4c.9.3 1.8.5 2.7.6a2 2 0 011.7 2.1z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+
+  inbox: (p) => (
+    <svg
+      {...p}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path
+        d="M22 12h-6l-2 3h-4l-2-3H2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+
+      <path
+        d="M5.5 5h13l3.5 7v7a2 2 0 01-2 2H4a2 2 0 01-2-2v-7z"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
+};
+
+/* =========================================================
+   INFO FIELD
+========================================================= */
+
+function InfoField({ label, value, icon }) {
   return (
-    <div className={`rounded-lg border p-3 ${colors[color]}`}>
-      <p className="text-xs font-medium uppercase tracking-wide opacity-60">{label}</p>
-      <p className="font-semibold mt-0.5">{value}</p>
+    <div className="rounded-xl border border-[#e4edef] bg-[#f5f7f8] p-3">
+      <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#819399]">
+        {icon}
+        {label}
+      </p>
+
+      <p className="mt-1 break-words text-sm font-semibold text-[#123F4B]">
+        {value}
+      </p>
     </div>
   );
 }
 
-function DetailsModal({ app, onClose }) {
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header coloré */}
-        <div className="flex justify-between items-center bg-gradient-to-r from-purple-600 to-indigo-600 p-5 shrink-0">
-          <h2 className="font-bold text-lg text-white">Détails de la candidature</h2>
-          <button
-            onClick={onClose}
-            className="text-white/80 hover:text-white hover:bg-white/20 text-2xl leading-none w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-          >
-            &times;
-          </button>
-        </div>
+/* =========================================================
+   DETAILS MODAL
+========================================================= */
 
-        <div className="p-5 space-y-6 overflow-y-auto flex-1">
-          {/* Infos personnelles */}
-          <div>
-            <h3 className="font-semibold text-sm text-purple-700 mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-purple-500"></span>
-              Informations personnelles
-            </h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <InfoField label="Nom complet" value={app.student?.user?.name || "—"} color="purple" />
-              <InfoField label="Email" value={app.student?.user?.email || "—"} color="purple" />
-              <div className="col-span-2">
-                <InfoField label="Téléphone" value={app.student?.telephone || "Non renseigné"} color="purple" />
-              </div>
+function DetailsModal({ app, onClose }) {
+  if (!app) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[#123F4B]/40 p-4 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-[#e4edef] bg-white shadow-[0_20px_60px_rgba(18,63,75,0.20)]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* HEADER */}
+
+        <div className="flex shrink-0 items-center justify-between bg-[#123F4B] p-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar
+              name={app.student?.user?.name || "?"}
+              size="md"
+              square={false}
+              className="ring-2 ring-[#08B7C9]/40"
+            />
+
+            <div className="min-w-0">
+              <h2 className="truncate text-base font-bold leading-tight text-white">
+                {app.student?.user?.name || "Candidat"}
+              </h2>
+
+              <p className="truncate text-xs text-[#9ee7ec]">
+                {app.offer?.titre || "Offre"}
+              </p>
             </div>
           </div>
 
-          {/* Infos académiques */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Fermer"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/70 transition-all hover:bg-white/10 hover:text-[#08B7C9]"
+          >
+            <Icon.x className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* CONTENT */}
+
+        <div className="flex-1 space-y-6 overflow-y-auto p-5">
+          {/* Informations personnelles */}
+
           <div>
-            <h3 className="font-semibold text-sm text-blue-700 mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-              Informations académiques
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#819399]">
+              Informations personnelles
             </h3>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <InfoField label="Filière" value={app.student?.filiere || "Non renseigné"} color="blue" />
-              <InfoField label="Niveau" value={app.student?.niveau || "Non renseigné"} color="blue" />
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <InfoField
+                icon={<Icon.mail className="h-3 w-3" />}
+                label="Email"
+                value={app.student?.user?.email || "—"}
+              />
+
+              <InfoField
+                icon={<Icon.phone className="h-3 w-3" />}
+                label="Téléphone"
+                value={app.student?.telephone || "Non renseigné"}
+              />
+            </div>
+          </div>
+
+          {/* Formation */}
+
+          <div>
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#819399]">
+              Formation
+            </h3>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <InfoField
+                label="Filière"
+                value={app.student?.filiere || "Non renseigné"}
+              />
+
+              <InfoField
+                label="Niveau"
+                value={app.student?.niveau || "Non renseigné"}
+              />
             </div>
           </div>
 
           {/* Message */}
+
           <div>
-            <h3 className="font-semibold text-sm text-amber-700 mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#819399]">
               Message du candidat
             </h3>
-            <p className="text-sm bg-amber-50 border border-amber-100 rounded-lg p-3 text-amber-900">
-              {app.message || "Aucun message laissé par le candidat."}
+
+            <p className="rounded-xl border border-[#e4edef] bg-[#f5f7f8] p-3 text-sm leading-relaxed text-[#526970]">
+              {app.message ||
+                "Aucun message laissé par le candidat."}
             </p>
           </div>
 
           {/* Documents */}
+
           <div>
-            <h3 className="font-semibold text-sm text-green-700 mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-[#819399]">
               Documents
             </h3>
-            <div className="flex flex-wrap gap-3">
+
+            <div className="flex flex-wrap gap-2">
               {app.cv_path && (
                 <a
                   href={`http://localhost:8000/storage/${app.cv_path}`}
                   target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#c9e9ec] bg-[#EAFBFC] px-3 py-2 text-sm font-medium text-[#08B7C9] transition-all hover:bg-[#d9f7f9]"
                 >
-                  📄 Voir le CV
+                  <Icon.file className="h-3.5 w-3.5" />
+                  Voir le CV
                 </a>
               )}
+
               {app.lettre_motivation_path && (
                 <a
                   href={`http://localhost:8000/storage/${app.lettre_motivation_path}`}
                   target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 bg-green-50 hover:bg-green-100 border border-green-200 text-green-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#c9e9ec] bg-[#EAFBFC] px-3 py-2 text-sm font-medium text-[#08B7C9] transition-all hover:bg-[#d9f7f9]"
                 >
-                  ✉️ Voir la lettre
+                  <Icon.mail className="h-3.5 w-3.5" />
+                  Voir la lettre
                 </a>
               )}
-              {!app.cv_path && !app.lettre_motivation_path && (
-                <p className="text-sm text-gray-400">Aucun document fourni.</p>
-              )}
+
+              {!app.cv_path &&
+                !app.lettre_motivation_path && (
+                  <p className="text-sm italic text-[#94A4A9]">
+                    Aucun document fourni.
+                  </p>
+                )}
             </div>
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
+        {/* FOOTER */}
+
+        <div className="shrink-0 border-t border-[#e4edef] bg-[#f5f7f8] p-4">
           <button
+            type="button"
             onClick={onClose}
-            className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg font-medium text-sm transition-colors shadow-sm"
+            className="w-full rounded-lg bg-[#08B7C9] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-[#079faf] hover:shadow-md"
           >
             Fermer
           </button>
@@ -125,103 +354,667 @@ function DetailsModal({ app, onClose }) {
   );
 }
 
+/* =========================================================
+   STAT CARD
+========================================================= */
+
+function StatCard({ label, value, accent, icon }) {
+  return (
+    <div
+      className="
+        flex-1
+        rounded-2xl
+        border
+        border-[#e4edef]
+        bg-white
+        p-5
+        shadow-[0_3px_15px_rgba(18,63,75,0.045)]
+        transition-all
+        duration-300
+        hover:-translate-y-[2px]
+        hover:border-[#c9e9ec]
+        hover:shadow-[0_8px_25px_rgba(18,63,75,0.08)]
+      "
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#819399]">
+            {label}
+          </p>
+
+          <p
+            className={`mt-1 text-[28px] font-bold ${accent}`}
+          >
+            {value}
+          </p>
+        </div>
+
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EAFBFC] text-[#08B7C9]">
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   SKELETON
+========================================================= */
+
+function SkeletonCard() {
+  return (
+    <div className="animate-pulse rounded-2xl border border-[#e4edef] bg-white p-5 shadow-[0_3px_15px_rgba(18,63,75,0.045)]">
+      <div className="flex items-start gap-4">
+        <div className="h-10 w-10 shrink-0 rounded-full bg-[#e4edef]" />
+
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="h-4 w-1/3 rounded bg-[#e4edef]" />
+          <div className="h-3 w-1/4 rounded bg-[#f0f4f5]" />
+        </div>
+
+        <div className="h-6 w-20 shrink-0 rounded-full bg-[#f0f4f5]" />
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================
+   APPLICATIONS
+========================================================= */
+
 export default function Applications() {
   const { user } = useAuth();
+
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("toutes");
+  const [error, setError] = useState("");
 
-  const load = () => {
-    setLoading(true);
-    api.get("/applications").then((res) => setApplications(res.data)).finally(() => setLoading(false));
+  /* =======================================================
+     LOAD
+  ======================================================= */
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await api.get("/applications");
+
+      const data = Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+
+      setApplications(data);
+    } catch (err) {
+      console.error(
+        "Erreur lors du chargement des candidatures :",
+        err
+      );
+
+      setError(
+        err?.response?.data?.message ||
+          "Impossible de charger les candidatures."
+      );
+
+      setApplications([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    load();
+  }, []);
+
+  /* =======================================================
+     CHANGE STATUS
+  ======================================================= */
 
   const handleStatusChange = async (id, statut) => {
-    await api.patch(`/applications/${id}/statut`, { statut });
-    setApplications((prev) => prev.map((a) => (a.id === id ? { ...a, statut } : a)));
+    try {
+      setError("");
+
+      await api.patch(`/applications/${id}/statut`, {
+        statut,
+      });
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === id
+            ? {
+                ...app,
+                statut,
+              }
+            : app
+        )
+      );
+
+      setSelectedApp((prev) =>
+        prev?.id === id
+          ? {
+              ...prev,
+              statut,
+            }
+          : prev
+      );
+    } catch (err) {
+      console.error(
+        "Erreur lors de la modification du statut :",
+        err
+      );
+
+      setError(
+        err?.response?.data?.message ||
+          "Impossible de modifier le statut de la candidature."
+      );
+    }
   };
 
-  if (loading) return <p className="p-6 text-gray-500">Chargement...</p>;
+  /* =======================================================
+     STATS
+  ======================================================= */
+
+  const stats = useMemo(() => {
+    return {
+      total: applications.length,
+
+      en_attente: applications.filter(
+        (app) => app.statut === "en_attente"
+      ).length,
+
+      acceptee: applications.filter(
+        (app) => app.statut === "acceptee"
+      ).length,
+
+      refusee: applications.filter(
+        (app) => app.statut === "refusee"
+      ).length,
+    };
+  }, [applications]);
+
+  /* =======================================================
+     FILTER
+  ======================================================= */
+
+  const filtered = useMemo(() => {
+    const searchValue = search.trim().toLowerCase();
+
+    return applications.filter((app) => {
+      const matchesStatus =
+        statusFilter === "toutes" ||
+        app.statut === statusFilter;
+
+      const haystack = `
+        ${app.offer?.titre || ""}
+        ${app.offer?.company?.nom || ""}
+        ${app.student?.user?.name || ""}
+      `.toLowerCase();
+
+      const matchesSearch =
+        !searchValue || haystack.includes(searchValue);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [applications, search, statusFilter]);
+
+  /* =======================================================
+     FILTERS
+  ======================================================= */
+
+  const FILTERS = [
+    {
+      key: "toutes",
+      label: "Toutes",
+    },
+    {
+      key: "en_attente",
+      label: "En attente",
+    },
+    {
+      key: "acceptee",
+      label: "Acceptées",
+    },
+    {
+      key: "refusee",
+      label: "Refusées",
+    },
+  ];
+
+  /* =======================================================
+     MAIN
+  ======================================================= */
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-xl font-bold mb-6 text-gray-900">Consultez et suivez toutes vos candidatures en un seul endroit.</h1>
-      <div className="grid gap-4">
-        {applications.map((app) => (
-          <div
-            key={app.id}
-            className="bg-white border border-gray-200 hover:border-purple-200 hover:shadow-md p-5 rounded-xl transition-all shadow-sm"
-          >
-            <div className="flex justify-between items-start gap-4">
-              <div className="min-w-0">
-                <h2 className="font-semibold text-gray-900">{app.offer?.titre}</h2>
-                <p className="text-sm text-gray-500">{app.offer?.company?.nom}</p>
-                {user?.role !== "etudiant" && (
-                  <p className="text-sm text-gray-500">Candidat : {app.student?.user?.name}</p>
-                )}
-                <div className="flex gap-3 mt-1 text-sm">
-                  {app.cv_path && (
-                    <a
-                      href={`http://localhost:8000/storage/${app.cv_path}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-purple-700 hover:text-purple-800 underline"
-                    >
-                      CV
-                    </a>
-                  )}
-                  {app.lettre_motivation_path && (
-                    <a
-                      href={`http://localhost:8000/storage/${app.lettre_motivation_path}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-purple-700 hover:text-purple-800 underline"
-                    >
-                      Lettre de motivation
-                    </a>
-                  )}
-                </div>
-              </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium shrink-0 ${STATUT_COLORS[app.statut]}`}>
-                {STATUT_LABELS[app.statut]}
-              </span>
-            </div>
+    <div className="min-h-[calc(100vh-64px)] bg-[#f5f7f8] px-5 py-7 md:px-8">
 
-            <div className="flex gap-2 mt-4">
-              {user?.role === "entreprise" && (
-                <button
-                  onClick={() => setSelectedApp(app)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm inline-flex items-center gap-1.5"
-                >
-                  👁️ Voir les informations du candidat
-                </button>
-              )}
+      <div className="mx-auto max-w-[1150px]">
 
-              {user?.role === "entreprise" && app.statut === "en_attente" && (
-                <>
-                  <button
-                    onClick={() => handleStatusChange(app.id, "acceptee")}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Accepter
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(app.id, "refusee")}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Refuser
-                  </button>
-                </>
-              )}
-            </div>
+        {/* =================================================
+            HEADER
+        ================================================= */}
+
+        <div className="mb-7">
+          <h1 className="text-[27px] font-bold text-[#123F4B] md:text-[30px]">
+            Candidatures
+          </h1>
+
+          <p className="mt-1.5 max-w-[650px] text-[13px] text-[#819399]">
+            Consultez et suivez toutes vos candidatures en un seul
+            endroit.
+          </p>
+        </div>
+
+        {/* =================================================
+            ERROR
+        ================================================= */}
+
+        {error && (
+          <div className="mb-5 flex items-start justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+            <p>{error}</p>
+
+            <button
+              type="button"
+              onClick={() => setError("")}
+              className="shrink-0 font-semibold hover:text-rose-900"
+            >
+              ×
+            </button>
           </div>
-        ))}
-        {applications.length === 0 && <p className="text-gray-500">Aucune candidature pour le moment.</p>}
+        )}
+
+        {/* =================================================
+            STATISTICS
+        ================================================= */}
+
+        <div className="mb-7 flex flex-wrap justify-center gap-4">
+
+          <StatCard
+            label="Total"
+            value={stats.total}
+            accent="text-[#123F4B]"
+            icon={<Icon.inbox className="h-5 w-5" />}
+          />
+
+          <StatCard
+            label="En attente"
+            value={stats.en_attente}
+            accent="text-[#08B7C9]"
+            icon={<Icon.file className="h-5 w-5" />}
+          />
+
+          <StatCard
+            label="Acceptées"
+            value={stats.acceptee}
+            accent="text-emerald-600"
+            icon={<Icon.check className="h-5 w-5" />}
+          />
+
+          <StatCard
+            label="Refusées"
+            value={stats.refusee}
+            accent="text-rose-600"
+            icon={<Icon.x className="h-5 w-5" />}
+          />
+
+        </div>
+
+        {/* =================================================
+            SEARCH + FILTER
+        ================================================= */}
+
+        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+          <div className="relative w-full sm:max-w-lg">
+
+            <Icon.search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#819399]" />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Rechercher une offre, une entreprise..."
+              className="
+                w-full
+                rounded-xl
+                border
+                border-[#e4edef]
+                bg-white
+                py-2.5
+                pl-9
+                pr-3
+                text-sm
+                text-[#123F4B]
+                placeholder:text-[#94A4A9]
+                shadow-[0_3px_15px_rgba(18,63,75,0.035)]
+                outline-none
+                transition-all
+                focus:border-[#c9e9ec]
+                focus:ring-2
+                focus:ring-[#08B7C9]/15
+              "
+            />
+
+          </div>
+
+          <div className="flex flex-wrap gap-1.5">
+
+            {FILTERS.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={() =>
+                  setStatusFilter(filter.key)
+                }
+                className={`
+                  rounded-full
+                  px-3.5
+                  py-1.5
+                  text-xs
+                  font-semibold
+                  transition-all
+                  ${
+                    statusFilter === filter.key
+                      ? "bg-[#08B7C9] text-white shadow-sm"
+                      : "bg-white text-[#819399] ring-1 ring-inset ring-[#e4edef] hover:bg-[#EAFBFC] hover:text-[#08B7C9]"
+                  }
+                `}
+              >
+                {filter.label}
+              </button>
+            ))}
+
+          </div>
+        </div>
+
+        {/* =================================================
+            LIST
+        ================================================= */}
+
+        {loading ? (
+
+          <div className="grid gap-3">
+            {[...Array(3)].map((_, index) => (
+              <SkeletonCard key={index} />
+            ))}
+          </div>
+
+        ) : filtered.length === 0 ? (
+
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[#dcecef] bg-white py-16 text-center shadow-[0_3px_15px_rgba(18,63,75,0.035)]">
+
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EAFBFC] text-[#08B7C9]">
+              <Icon.inbox className="h-6 w-6" />
+            </div>
+
+            <p className="font-semibold text-[#123F4B]">
+              Aucune candidature trouvée
+            </p>
+
+            <p className="mt-1 text-sm text-[#94A4A9]">
+              {search || statusFilter !== "toutes"
+                ? "Essayez de modifier vos filtres de recherche."
+                : "Vos candidatures apparaîtront ici."}
+            </p>
+
+          </div>
+
+        ) : (
+
+          <div className="grid gap-3">
+
+            {filtered.map((app) => {
+
+              const statusLabel =
+                STATUT_LABELS[app.statut] ||
+                app.statut ||
+                "Inconnu";
+
+              const statusBadge =
+                STATUT_BADGE[app.statut] ||
+                "bg-[#f5f7f8] text-[#526970] ring-1 ring-inset ring-[#e4edef]";
+
+              const statusBar =
+                STATUT_BAR[app.statut] ||
+                "bg-[#94A4A9]";
+
+              return (
+                <div
+                  key={app.id}
+                  className="
+                    group
+                    relative
+                    overflow-hidden
+                    rounded-2xl
+                    border
+                    border-[#e4edef]
+                    bg-white
+                    p-5
+                    shadow-[0_3px_15px_rgba(18,63,75,0.045)]
+                    transition-all
+                    duration-300
+                    hover:-translate-y-[1px]
+                    hover:border-[#c9e9ec]
+                    hover:shadow-[0_8px_25px_rgba(18,63,75,0.08)]
+                  "
+                >
+
+                  {/* STATUS BAR */}
+
+                  <span
+                    className={`absolute inset-y-0 left-0 w-1 ${statusBar}`}
+                  />
+
+                  <div className="flex items-start justify-between gap-4 pl-2">
+
+                    <div className="flex min-w-0 items-start gap-3">
+
+                      <Avatar
+                        name={
+                          user?.role === "etudiant"
+                            ? app.offer?.company?.nom ||
+                              "Entreprise"
+                            : app.student?.user?.name ||
+                              "Candidat"
+                        }
+                        size="md"
+                      />
+
+                      <div className="min-w-0">
+
+                        <h2 className="truncate font-semibold text-[#123F4B]">
+                          {app.offer?.titre ||
+                            "Offre sans titre"}
+                        </h2>
+
+                        <p className="truncate text-sm text-[#819399]">
+                          {app.offer?.company?.nom ||
+                            "Entreprise non renseignée"}
+                        </p>
+
+                        {user?.role !== "etudiant" && (
+                          <p className="mt-0.5 truncate text-sm text-[#819399]">
+                            Candidat :{" "}
+                            <span className="font-medium text-[#526970]">
+                              {app.student?.user?.name ||
+                                "Nom non renseigné"}
+                            </span>
+                          </p>
+                        )}
+
+                        {/* DOCUMENTS */}
+
+                        <div className="mt-2 flex flex-wrap gap-3 text-xs">
+
+                          {app.cv_path && (
+                            <a
+                              href={`http://localhost:8000/storage/${app.cv_path}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-[#08B7C9] transition-colors hover:text-[#079faf]"
+                            >
+                              <Icon.file className="h-3 w-3" />
+                              CV
+                            </a>
+                          )}
+
+                          {app.lettre_motivation_path && (
+                            <a
+                              href={`http://localhost:8000/storage/${app.lettre_motivation_path}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-[#08B7C9] transition-colors hover:text-[#079faf]"
+                            >
+                              <Icon.mail className="h-3 w-3" />
+                              Lettre de motivation
+                            </a>
+                          )}
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    {/* STATUS */}
+
+                    <span
+                      className={`
+                        shrink-0
+                        whitespace-nowrap
+                        rounded-full
+                        px-2.5
+                        py-1
+                        text-xs
+                        font-semibold
+                        ${statusBadge}
+                      `}
+                    >
+                      {statusLabel}
+                    </span>
+
+                  </div>
+
+                  {/* ACTIONS */}
+
+                  <div className="mt-4 flex flex-wrap gap-2 pl-2">
+
+                    {user?.role === "entreprise" && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedApp(app)
+                        }
+                        className="
+                          inline-flex
+                          items-center
+                          gap-1.5
+                          rounded-lg
+                          bg-[#08B7C9]
+                          px-3
+                          py-1.5
+                          text-sm
+                          font-medium
+                          text-white
+                          shadow-sm
+                          transition-all
+                          hover:bg-[#079faf]
+                          hover:shadow-md
+                        "
+                      >
+                        <Icon.eye className="h-3.5 w-3.5" />
+                        Voir le profil
+                      </button>
+                    )}
+
+                    {user?.role === "entreprise" &&
+                      app.statut === "en_attente" && (
+                        <>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleStatusChange(
+                                app.id,
+                                "acceptee"
+                              )
+                            }
+                            className="
+                              inline-flex
+                              items-center
+                              gap-1.5
+                              rounded-lg
+                              bg-emerald-600
+                              px-3
+                              py-1.5
+                              text-sm
+                              font-medium
+                              text-white
+                              shadow-sm
+                              transition-all
+                              hover:bg-emerald-700
+                            "
+                          >
+                            <Icon.check className="h-3.5 w-3.5" />
+                            Accepter
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleStatusChange(
+                                app.id,
+                                "refusee"
+                              )
+                            }
+                            className="
+                              inline-flex
+                              items-center
+                              gap-1.5
+                              rounded-lg
+                              border
+                              border-rose-200
+                              bg-rose-50
+                              px-3
+                              py-1.5
+                              text-sm
+                              font-medium
+                              text-rose-600
+                              transition-all
+                              hover:bg-rose-100
+                            "
+                          >
+                            <Icon.x className="h-3.5 w-3.5" />
+                            Refuser
+                          </button>
+
+                        </>
+                      )}
+
+                  </div>
+
+                </div>
+              );
+            })}
+
+          </div>
+        )}
+
       </div>
 
-      {selectedApp && <DetailsModal app={selectedApp} onClose={() => setSelectedApp(null)} />}
+      {/* =================================================
+          MODAL
+      ================================================= */}
+
+      {selectedApp && (
+        <DetailsModal
+          app={selectedApp}
+          onClose={() => setSelectedApp(null)}
+        />
+      )}
+
     </div>
   );
 }

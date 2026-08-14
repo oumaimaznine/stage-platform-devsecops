@@ -1,335 +1,544 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
-const STATS = [
-  { value: "500+", label: "Étudiants inscrits" },
-  { value: "120+", label: "Entreprises partenaires" },
-  { value: "800+", label: "Stages réalisés" },
-];
-
-const SERVICES = [
-  { icon: "📋", title: "Offres de stage", text: "Publication et recherche d'offres adaptées à chaque filière." },
-  { icon: "📨", title: "Candidatures", text: "Dépôt de CV, lettres de motivation et suivi de statut en direct." },
-  { icon: "📄", title: "Conventions & rapports", text: "Dépôt et validation des conventions signées et des rapports de stage." },
-  { icon: "💬", title: "Messagerie", text: "Échange direct entre étudiants et entreprises, sans intermédiaire." },
-];
-
-const STEPS = [
-  { n: "01", title: "Crée ton profil", text: "Étudiant ou entreprise, inscris-toi en quelques minutes et complète ton profil." },
-  { n: "02", title: "Publie ou postule", text: "Les entreprises publient leurs offres, les étudiants postulent en un clic." },
-  { n: "03", title: "Échange en direct", text: "Discutez par messagerie intégrée pour organiser la suite sans quitter la plateforme." },
-  { n: "04", title: "Signe et suis ton stage", text: "Dépose la convention signée et le rapport final, validés par l'administration." },
-];
-
-const TESTIMONIALS = [
-  { initials: "SL", name: "Sara L.", role: "Étudiante en Génie Informatique", quote: "J'ai trouvé mon stage de fin d'études en deux semaines. Le suivi de candidature en temps réel m'a évité de relancer les entreprises par email." },
-  { initials: "KM", name: "Karim M.", role: "Responsable RH, entreprise partenaire", quote: "Publier une offre et échanger avec les candidats se fait au même endroit. On a divisé par deux le temps de traitement des candidatures." },
-  { initials: "YB", name: "Yasmine B.", role: "Étudiante en Master Marketing", quote: "Le dépôt de la convention et du rapport en ligne évite les allers-retours papier avec l'administration. Simple et rapide." },
-];
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [animating, setAnimating] = useState(false);
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // =========================================================
+  // LOGIN
+  // =========================================================
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setError("");
     setSubmitting(true);
+
     try {
       await login(email, password);
       navigate("/dashboard");
     } catch (err) {
-      setError("Identifiants invalides");
+      setError("Invalid email or password");
     } finally {
       setSubmitting(false);
     }
   };
 
+  // =========================================================
+  // ANIMATION → REGISTER
+  // =========================================================
+  const goToRegister = () => {
+    if (animating) return;
+
+    setAnimating(true);
+
+    setTimeout(() => {
+      navigate("/register");
+    }, 900);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <header className="relative border-b border-ink-800 bg-white/95 backdrop-blur sticky top-0 z-40 overflow-hidden">
-        <div className="pointer-events-none absolute -top-16 left-1/3 w-72 h-72 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="relative max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-[0_2px_10px_rgba(109,94,248,0.35)]">
-              GS
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
-            </div>
-            <div>
-              <p className="text-ink-100 font-semibold text-sm leading-tight">Gestion des stages</p>
-              <p className="text-ink-500 text-xs leading-tight">Plateforme de suivi</p>
-            </div>
-          </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm text-ink-300">
-            <a href="#accueil" className="relative hover:text-ink-100 transition-colors group">Accueil</a>
-            <a href="#apropos" className="relative hover:text-ink-100 transition-colors group">À propos</a>
-            <a href="#services" className="relative hover:text-ink-100 transition-colors group">Services</a>
-            <a href="#contact" className="relative hover:text-ink-100 transition-colors group">Contact</a>
-          </nav>
-          <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-primary-700 border border-primary-500/30 bg-primary-500/10 px-3.5 py-1.5 rounded-full">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse" />
-            120+ entreprises partenaires
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#f5f5f5] flex items-center justify-center p-4">
 
-      <div id="accueil" className="relative flex-1 grid lg:grid-cols-2 bg-ink-50/60 overflow-hidden">
-        <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="pointer-events-none absolute top-1/2 -right-32 w-96 h-96 bg-primary-500/10 rounded-full blur-3xl" />
+      {/* =====================================================
+          MAIN CONTAINER
+      ====================================================== */}
+      <div
+        className={`
+          relative
+          w-full
+          max-w-[850px]
+          min-h-[500px]
+          bg-white
+          rounded-[25px]
+          overflow-hidden
+          shadow-[0_18px_50px_rgba(0,0,0,0.12)]
+
+          transition-transform
+          duration-[900ms]
+          ease-[cubic-bezier(0.76,0,0.24,1)]
+
+          ${animating ? "scale-[0.985]" : "scale-100"}
+        `}
+      >
+
+        {/* =====================================================
+            LOGIN FORM
+        ====================================================== */}
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.35]"
-          style={{
-            backgroundImage: "radial-gradient(#d4d4d8 1px, transparent 1px)",
-            backgroundSize: "24px 24px",
-            maskImage: "radial-gradient(ellipse 60% 50% at 50% 0%, black 20%, transparent 70%)",
-          }}
-        />
+          className={`
+            absolute
+            top-0
+            h-full
+            w-[55%]
 
-        <div className="relative flex items-center justify-center px-6 py-16">
-          <form
-            onSubmit={handleSubmit}
-            className="w-full max-w-sm bg-white border border-ink-800 rounded-xl p-8 shadow-card"
-          >
-            <h1 className="text-xl font-bold text-ink-100 text-center mb-1">Authentification</h1>
-            <p className="text-sm text-ink-500 text-center mb-6">Accède à ton espace étudiant ou entreprise</p>
+            flex
+            items-center
+            justify-center
 
+            bg-white
+
+            px-10
+            py-8
+
+            z-10
+
+            transition-all
+            duration-[900ms]
+            ease-[cubic-bezier(0.76,0,0.24,1)]
+
+            ${
+              animating
+                ? "left-[-18%] opacity-0 scale-[0.92] blur-[3px]"
+                : "left-[45%] opacity-100 scale-100 blur-0"
+            }
+          `}
+        >
+          <div className="w-full max-w-[350px]">
+
+            {/* TITLE */}
+            <h2 className="text-center text-[30px] font-bold text-[#111827] mb-5">
+              Login
+            </h2>
+
+            {/* ERROR */}
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mb-4">
+              <div
+                className="
+                  mb-3
+                  px-3
+                  py-2
+                  rounded-md
+                  bg-red-50
+                  border
+                  border-red-200
+                  text-red-600
+                  text-[13px]
+                "
+              >
                 {error}
-              </p>
+              </div>
             )}
 
-            <div className="mb-4">
-              <label className="text-sm text-ink-300 block mb-1.5">Email</label>
-              <input
-                type="email"
-                placeholder="Identifiant"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-white border border-ink-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-ink-100 placeholder-ink-500 p-2.5 w-full rounded-lg text-sm transition"
-                required
-              />
+            <form onSubmit={handleSubmit}>
+
+              {/* EMAIL */}
+              <div className="relative mb-5">
+
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="
+                    w-full
+                    h-[46px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    pr-12
+                    text-[14px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                    transition
+                  "
+                />
+
+                {/* USER ICON */}
+                <div
+                  className="
+                    absolute
+                    right-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-[#222]
+                  "
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M12 12c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5Zm0 2c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5Z" />
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* PASSWORD */}
+              <div className="relative mb-3">
+
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="
+                    w-full
+                    h-[46px]
+                    bg-[#eeeeee]
+                    border-none
+                    outline-none
+                    px-4
+                    pr-12
+                    text-[14px]
+                    text-[#333]
+                    placeholder-[#999]
+                    focus:bg-[#e8e8e8]
+                    transition
+                  "
+                />
+
+                {/* LOCK ICON */}
+                <div
+                  className="
+                    absolute
+                    right-4
+                    top-1/2
+                    -translate-y-1/2
+                    text-[#222]
+                  "
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2Zm-5 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2ZM10 8V6a2 2 0 1 1 4 0v2h-4Z" />
+                  </svg>
+                </div>
+
+              </div>
+
+              {/* FORGOT PASSWORD */}
+              <div className="text-center mb-4">
+                <span
+                  className="
+                    text-[13px]
+                    text-[#333]
+                    cursor-pointer
+                    hover:text-[#08b7c9]
+                    transition
+                  "
+                >
+                  Forgot your password?
+                </span>
+              </div>
+
+              {/* LOGIN BUTTON */}
+              <button
+                type="submit"
+                disabled={submitting}
+                className="
+                  w-full
+                  h-[46px]
+                  rounded-full
+                  bg-gradient-to-r
+                  from-[#123f4b]
+                  via-[#08aebe]
+                  to-[#0bc7d5]
+                  text-white
+                  font-semibold
+                  text-[14px]
+                  shadow-[0_5px_15px_rgba(0,0,0,0.14)]
+                  hover:scale-[1.015]
+                  active:scale-[0.98]
+                  transition-all
+                  duration-300
+                  disabled:opacity-60
+                  disabled:cursor-not-allowed
+                "
+              >
+                {submitting ? "Signing in..." : "Login"}
+              </button>
+
+            </form>
+
+            {/* SOCIAL LOGIN */}
+            <div className="text-center mt-4">
+
+              <p className="text-[13px] text-[#555] mb-3">
+                or continue with
+              </p>
+
+              <div className="flex items-center justify-center gap-3">
+
+                {/* GOOGLE */}
+                <div
+                  className="
+                    w-[48px]
+                    h-[46px]
+                    border
+                    border-[#ddd]
+                    flex
+                    items-center
+                    justify-center
+                    bg-white
+                    text-[21px]
+                    font-bold
+                    text-[#222]
+                    shadow-sm
+                    hover:-translate-y-1
+                    hover:shadow-md
+                    transition-all
+                    duration-300
+                  "
+                >
+                  G
+                </div>
+
+                {/* FACEBOOK */}
+                <div
+                  className="
+                    w-[48px]
+                    h-[46px]
+                    border
+                    border-[#ddd]
+                    flex
+                    items-center
+                    justify-center
+                    bg-white
+                    text-[21px]
+                    font-bold
+                    text-[#222]
+                    shadow-sm
+                    hover:-translate-y-1
+                    hover:shadow-md
+                    transition-all
+                    duration-300
+                  "
+                >
+                  f
+                </div>
+
+                {/* KEYCLOAK */}
+                <a
+                  href="http://stage-platform.local:8000/auth/keycloak/redirect"
+                  title="Sign in with Keycloak"
+                  className="
+                    w-[48px]
+                    h-[46px]
+                    border
+                    border-[#ddd]
+                    flex
+                    items-center
+                    justify-center
+                    bg-white
+                    text-[19px]
+                    font-bold
+                    text-[#222]
+                    shadow-sm
+                    hover:-translate-y-1
+                    hover:border-[#08b7c9]
+                    hover:text-[#08b7c9]
+                    hover:shadow-md
+                    transition-all
+                    duration-300
+                  "
+                >
+                  K
+                </a>
+
+                {/* LINKEDIN */}
+                <div
+                  className="
+                    w-[48px]
+                    h-[46px]
+                    border
+                    border-[#ddd]
+                    flex
+                    items-center
+                    justify-center
+                    bg-white
+                    text-[19px]
+                    font-bold
+                    text-[#222]
+                    shadow-sm
+                    hover:-translate-y-1
+                    hover:shadow-md
+                    transition-all
+                    duration-300
+                  "
+                >
+                  in
+                </div>
+
+              </div>
+
             </div>
 
-            <div className="mb-6">
-              <label className="text-sm text-ink-300 block mb-1.5">Mot de passe</label>
-              <input
-                type="password"
-                placeholder="Mot de passe"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="bg-white border border-ink-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 outline-none text-ink-100 placeholder-ink-500 p-2.5 w-full rounded-lg text-sm transition"
-                required
-              />
-            </div>
+          </div>
+        </div>
 
+        {/* =====================================================
+            TURQUOISE WELCOME PANEL
+        ====================================================== */}
+        <div
+          className={`
+            absolute
+            top-0
+            h-full
+            w-[45%]
+
+            flex
+            items-center
+            justify-center
+
+            overflow-hidden
+
+            bg-gradient-to-br
+            from-[#11c7d7]
+            to-[#08b7c9]
+
+            text-white
+            z-20
+
+            transition-all
+            duration-[900ms]
+            ease-[cubic-bezier(0.76,0,0.24,1)]
+
+            ${
+              animating
+                ? "left-[55%] scale-[1.04]"
+                : "left-0 scale-100"
+            }
+          `}
+          style={{
+            borderTopRightRadius: "150px",
+            borderBottomRightRadius: "150px",
+          }}
+        >
+
+          {/* DECORATIVE CIRCLE 1 */}
+          <div
+            className={`
+              absolute
+              -left-[150px]
+              -top-[100px]
+              w-[400px]
+              h-[400px]
+              rounded-full
+              bg-[#0bc2d1]
+              opacity-60
+              transition-transform
+              duration-[1200ms]
+              ease-out
+
+              ${
+                animating
+                  ? "scale-[1.25] rotate-12"
+                  : "scale-100"
+              }
+            `}
+          />
+
+          {/* DECORATIVE CIRCLE 2 */}
+          <div
+            className={`
+              absolute
+              -left-[100px]
+              -bottom-[130px]
+              w-[350px]
+              h-[350px]
+              rounded-full
+              bg-[#10cbd8]
+              opacity-50
+              transition-transform
+              duration-[1200ms]
+              ease-out
+
+              ${
+                animating
+                  ? "scale-[1.2] -rotate-12"
+                  : "scale-100"
+              }
+            `}
+          />
+
+          {/* WELCOME CONTENT */}
+          <div
+            className={`
+              relative
+              z-10
+              text-center
+              px-7
+
+              transition-all
+              duration-[750ms]
+              ease-out
+
+              ${
+                animating
+                  ? "opacity-0 scale-[0.72] translate-x-[45px] blur-[5px]"
+                  : "opacity-100 scale-100 translate-x-0 blur-0"
+              }
+            `}
+          >
+
+            <h1 className="text-[30px] font-bold tracking-tight mb-3">
+              Welcome!
+            </h1>
+
+            <p className="text-[14px] leading-6 text-white/95 mb-1">
+              Your dedicated space to manage
+            </p>
+
+            <p className="text-[14px] leading-6 text-white/95 mb-6">
+              and track your internships.
+            </p>
+
+            {/* REGISTER BUTTON */}
             <button
-              type="submit"
-              disabled={submitting}
-              className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5 w-full rounded-lg text-sm transition disabled:opacity-50"
+              type="button"
+              onClick={goToRegister}
+              disabled={animating}
+              className="
+                inline-flex
+                items-center
+                justify-center
+                px-8
+                py-2.5
+                rounded-full
+                border-2
+                border-white
+                text-white
+                font-semibold
+                text-[13px]
+
+                hover:bg-white
+                hover:text-[#08b7c9]
+                hover:scale-105
+
+                active:scale-95
+
+                transition-all
+                duration-300
+
+                disabled:opacity-70
+                disabled:cursor-default
+              "
             >
-              {submitting ? "Connexion..." : "Se connecter"}
+              Create an account
             </button>
 
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-ink-800" />
-              <span className="text-xs text-ink-500">ou</span>
-              <div className="flex-1 h-px bg-ink-800" />
-            </div>
+          </div>
 
-            
-            <a
-              href="http://stage-platform.local:8000/auth/keycloak/redirect"
-              className="flex items-center justify-center gap-2 border border-ink-700 hover:border-primary-500 text-ink-100 font-medium px-4 py-2.5 w-full rounded-lg text-sm transition"
-            >
-              Se connecter avec Keycloak
-            </a>
-
-            <p className="text-sm text-center text-ink-500 mt-5">
-              Pas encore inscrit ?{" "}
-              <Link to="/register" className="text-primary-700 font-medium hover:underline">
-                Créer un compte
-              </Link>
-            </p>
-          </form>
         </div>
 
-        <div className="hidden lg:flex items-center justify-center relative px-10 py-16">
-          <div className="relative w-full h-full rounded-2xl overflow-hidden shadow-card border border-ink-800">
-            <img
-              src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80"
-              alt="Étudiants collaborant sur un projet"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-8">
-              <h2 className="text-2xl font-bold leading-tight mb-2 text-white">
-                Connectez étudiants et entreprises
-              </h2>
-              <p className="text-white/85 text-sm max-w-md">
-                Offres, candidatures, conventions, rapports et validation administrative,
-                tout au même endroit.
-              </p>
-            </div>
-          </div>
-          <div className="absolute top-20 left-2 bg-white border border-ink-800 rounded-xl shadow-card px-5 py-4">
-            <p className="text-2xl font-bold text-ink-100">800+</p>
-            <p className="text-xs text-ink-500">Stages réalisés</p>
-          </div>
-        </div>
       </div>
-
-      <section id="apropos" className="border-t border-ink-800 bg-white">
-        <div className="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <span className="inline-block text-xs font-semibold tracking-wider text-primary-700 uppercase mb-3">À propos de nous</span>
-            <h2 className="text-3xl font-bold text-ink-100 mb-5 leading-tight">Une plateforme pensée pour simplifier chaque étape du stage</h2>
-            <p className="text-ink-300 leading-relaxed mb-6">
-              Gestion des stages connecte étudiants et entreprises autour d'un même
-              outil : publication d'offres, candidatures, conventions et rapports.
-              Notre objectif est de réduire la charge administrative et d'accélérer
-              la mise en relation entre les talents et les entreprises qui recrutent.
-            </p>
-            <div className="grid grid-cols-3 gap-6">
-              {STATS.map((s) => (
-                <div key={s.label}>
-                  <p className="text-2xl font-bold text-ink-100">{s.value}</p>
-                  <p className="text-xs text-ink-500 mt-1">{s.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="relative rounded-xl overflow-hidden border border-ink-800 h-72 lg:h-full shadow-card">
-            <img
-              src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=1000&q=80"
-              alt="Équipe au travail dans un bureau lumineux"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
-        </div>
-      </section>
-
-      <section id="services" className="relative border-t border-ink-800 bg-ink-50/60 overflow-hidden">
-        <div className="pointer-events-none absolute -bottom-24 -left-24 w-80 h-80 bg-primary-500/10 rounded-full blur-3xl" />
-        <div className="relative max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="inline-block text-xs font-semibold tracking-wider text-primary-700 uppercase mb-3">Nos services</span>
-            <h2 className="text-3xl font-bold text-ink-100 mb-4">Tout ce qu'il faut, au même endroit</h2>
-            <p className="text-ink-300">De la recherche d'offre à la validation finale, chaque étape du stage est centralisée et suivie en temps réel.</p>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {SERVICES.map((s) => (
-              <div key={s.title} className="bg-white border border-ink-800 hover:border-primary-500/40 rounded-xl p-6 shadow-card transition-colors">
-                <div className="w-11 h-11 rounded-lg bg-primary-500/15 text-primary-700 flex items-center justify-center text-xl mb-4">{s.icon}</div>
-                <h3 className="text-ink-100 font-semibold mb-2">{s.title}</h3>
-                <p className="text-sm text-ink-300 leading-relaxed">{s.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative border-t border-ink-800 bg-white overflow-hidden">
-        <div className="pointer-events-none absolute top-0 right-0 w-80 h-80 bg-primary-500/5 rounded-full blur-3xl" />
-        <div className="relative max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="inline-block text-xs font-semibold tracking-wider text-primary-700 uppercase mb-3">Comment ça marche</span>
-            <h2 className="text-3xl font-bold text-ink-100 mb-4">Quatre étapes, du profil au rapport final</h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {STEPS.map((step, i) => (
-              <div key={step.n} className="relative">
-                <div className="bg-white border border-ink-800 rounded-xl p-6 shadow-card h-full">
-                  <span className="text-xs font-semibold text-primary-700">{step.n}</span>
-                  <h3 className="text-ink-100 font-semibold mt-2 mb-2">{step.title}</h3>
-                  <p className="text-sm text-ink-300 leading-relaxed">{step.text}</p>
-                </div>
-                {i < STEPS.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-px bg-ink-800" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-ink-800 bg-ink-50/60">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <div className="text-center max-w-2xl mx-auto mb-14">
-            <span className="inline-block text-xs font-semibold tracking-wider text-primary-700 uppercase mb-3">Ils utilisent la plateforme</span>
-            <h2 className="text-3xl font-bold text-ink-100 mb-4">Ce qu'en disent étudiants et entreprises</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="relative bg-white border border-ink-800 rounded-xl p-6 shadow-card flex flex-col">
-                <span className="absolute top-4 right-5 text-4xl leading-none text-primary-500/15 font-serif select-none">"</span>
-                <p className="text-sm text-ink-300 leading-relaxed flex-1">"{t.quote}"</p>
-                <div className="flex items-center gap-3 mt-5">
-                  <div className="w-10 h-10 rounded-full bg-primary-500/15 text-primary-700 flex items-center justify-center text-sm font-semibold shrink-0">{t.initials}</div>
-                  <div>
-                    <p className="text-sm font-semibold text-ink-100">{t.name}</p>
-                    <p className="text-xs text-ink-500">{t.role}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="contact" className="border-t border-ink-800 bg-white">
-        <div className="max-w-7xl mx-auto px-6 py-20 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <span className="inline-block text-xs font-semibold tracking-wider text-primary-700 uppercase mb-3">Contact</span>
-            <h2 className="text-3xl font-bold text-ink-100 mb-4">Une question ? Contactez-nous</h2>
-            <p className="text-ink-300 mb-8 max-w-md">Notre équipe vous répond sous 24h, du lundi au vendredi.</p>
-            <div className="space-y-5">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary-500/15 text-primary-700 flex items-center justify-center shrink-0">📧</div>
-                <div>
-                  <p className="text-xs text-ink-500">Email</p>
-                  <a href="mailto:contact@gestiondesstages.com" className="text-ink-100 hover:text-primary-700 transition-colors">contact@gestiondesstages.com</a>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary-500/15 text-primary-700 flex items-center justify-center shrink-0">📞</div>
-                <div>
-                  <p className="text-xs text-ink-500">Téléphone</p>
-                  <a href="tel:+212500000000" className="text-ink-100 hover:text-primary-700 transition-colors">+212 5 00 00 00 00</a>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-lg bg-primary-500/15 text-primary-700 flex items-center justify-center shrink-0">📍</div>
-                <div>
-                  <p className="text-xs text-ink-500">Adresse</p>
-                  <p className="text-ink-100">Casablanca, Maroc</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white border border-ink-800 rounded-xl p-8 shadow-card">
-            <h3 className="text-ink-100 font-semibold mb-5">Envoyez-nous un message</h3>
-            <div className="space-y-4">
-              <input type="text" placeholder="Votre nom" className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2.5 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm transition" />
-              <input type="email" placeholder="Votre email" className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2.5 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm transition" />
-              <textarea placeholder="Votre message" rows={4} className="bg-white border border-ink-700 focus:border-primary-500 outline-none p-2.5 w-full rounded-lg text-ink-100 placeholder-ink-500 text-sm resize-none transition" />
-              <button type="button" className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2.5 w-full rounded-lg text-sm transition">Envoyer le message</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <footer className="border-t border-ink-800 py-4 bg-white">
-        <div className="max-w-7xl mx-auto px-6 flex justify-between text-xs text-ink-500">
-          <span>© 2025-2026 Gestion des stages</span>
-          <span>Plateforme de suivi des stages</span>
-        </div>
-      </footer>
     </div>
   );
 }

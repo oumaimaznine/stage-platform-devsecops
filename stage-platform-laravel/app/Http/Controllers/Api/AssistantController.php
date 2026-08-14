@@ -19,11 +19,13 @@ class AssistantController extends Controller
 
         $contents = [];
 
-        // Contexte système pour que l'assistant connaisse le rôle de l'utilisateur
         $user = $request->user();
         $systemContext = "Tu es l'assistant IA de la plateforme 'Gestion des stages'. "
-            . "Tu aides les étudiants, entreprises et administrateurs à utiliser la plateforme "
-            . "(candidatures, offres de stage, conventions, rapports). "
+            . "Tu aides UNIQUEMENT sur les sujets liés à la plateforme : candidatures, offres de stage, "
+            . "conventions, rapports, entretiens, et utilisation de l'application. "
+            . "Si on te pose une question hors de ce cadre (culture générale, actualité, autres sujets), "
+            . "réponds poliment que tu es limité à l'assistance sur la plateforme de gestion des stages "
+            . "et propose de reformuler la question dans ce contexte. "
             . "L'utilisateur actuel est {$user->name}, avec le rôle : {$user->role}. "
             . "Réponds toujours en français, de façon concise et utile.";
 
@@ -36,7 +38,6 @@ class AssistantController extends Controller
             'parts' => [['text' => "Compris, je suis prêt à aider {$user->name}."]],
         ];
 
-        // Historique de conversation envoyé par le frontend
         foreach ($data['history'] ?? [] as $msg) {
             $contents[] = [
                 'role' => $msg['role'] === 'assistant' ? 'model' : 'user',
@@ -50,7 +51,7 @@ class AssistantController extends Controller
         ];
 
         $response = Http::post(
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={$apiKey}",
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={$apiKey}",
             ['contents' => $contents]
         );
 

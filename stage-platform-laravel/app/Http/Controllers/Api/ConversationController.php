@@ -32,34 +32,52 @@ class ConversationController extends Controller
     }
 
     // Démarrer ou récupérer une conversation existante
-    public function store(Request $request)
-    {
-        $user = $request->user();
+   public function store(Request $request)
+{
+    $user = $request->user();
+
+    if ($user->role === 'etudiant') {
 
         $data = $request->validate([
-            'company_id' => 'required_if:role,etudiant|exists:companies,id',
-            'student_id' => 'required_if:role,entreprise|exists:students,id',
+            'company_id' => 'required|exists:companies,id',
             'internship_offer_id' => 'nullable|exists:internship_offers,id',
         ]);
 
-        if ($user->role === 'etudiant') {
-            $studentId = $user->student->id;
-            $companyId = $data['company_id'];
-        } elseif ($user->role === 'entreprise') {
-            $companyId = $user->company->id;
-            $studentId = $data['student_id'];
-        } else {
-            return response()->json(['message' => 'Accès réservé aux étudiants et entreprises'], 403);
-        }
+        $studentId = $user->student->id;
+        $companyId = $data['company_id'];
 
-        $conversation = Conversation::firstOrCreate([
-            'student_id' => $studentId,
-            'company_id' => $companyId,
-            'internship_offer_id' => $data['internship_offer_id'] ?? null,
+    } elseif ($user->role === 'entreprise') {
+
+        $data = $request->validate([
+            'student_id' => 'required|exists:students,id',
+            'internship_offer_id' => 'nullable|exists:internship_offers,id',
         ]);
 
-        return response()->json($conversation->load(['student.user', 'company', 'offer']), 201);
+        $companyId = $user->company->id;
+        $studentId = $data['student_id'];
+
+    } else {
+
+        return response()->json([
+            'message' => 'Accès réservé aux étudiants et entreprises'
+        ], 403);
     }
+
+    $conversation = Conversation::firstOrCreate([
+        'student_id' => $studentId,
+        'company_id' => $companyId,
+        'internship_offer_id' => $data['internship_offer_id'] ?? null,
+    ]);
+
+    return response()->json(
+        $conversation->load([
+            'student.user',
+            'company',
+            'offer'
+        ]),
+        201
+    );
+}
 
     public function show(Request $request, Conversation $conversation)
     {
