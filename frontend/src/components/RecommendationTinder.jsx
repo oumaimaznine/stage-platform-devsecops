@@ -219,6 +219,18 @@ function getSwipeMessage(type) {
       };
 }
 
+function getSwipeClass(direction) {
+  if (direction === "like") {
+    return "translate-x-[110%] rotate-[4deg] opacity-0";
+  }
+
+  if (direction === "pass") {
+    return "-translate-x-[110%] -rotate-[4deg] opacity-0";
+  }
+
+  return "";
+}
+
 /* =========================================================
    LOADING STATE
 ========================================================= */
@@ -688,12 +700,7 @@ function OfferCard({
   onFavorite,
   onContact,
 }) {
-  const swipeClass =
-    direction === "like"
-      ? "translate-x-[110%] rotate-[4deg] opacity-0"
-      : direction === "pass"
-        ? "-translate-x-[110%] -rotate-[4deg] opacity-0"
-        : "";
+  const swipeClass = getSwipeClass(direction);
 
   return (
     <div
