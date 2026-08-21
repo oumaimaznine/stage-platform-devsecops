@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 import {
   PieChart,
   Pie,
@@ -13,6 +15,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+
 import api from "../api/axios";
 
 /* =========================================================
@@ -28,7 +31,7 @@ const COLORS = [
 ];
 
 /* =========================================================
-   TOOLTIP
+   TOOLTIP STYLE
 ========================================================= */
 
 const tooltipStyle = {
@@ -53,7 +56,7 @@ const tooltipStyle = {
 };
 
 /* =========================================================
-   STAT ICONS
+   STAT ICON
 ========================================================= */
 
 function StatIcon({ type }) {
@@ -156,7 +159,7 @@ function StatIcon({ type }) {
 }
 
 /* =========================================================
-   DETECT STAT TYPE
+   GET STAT ICON TYPE
 ========================================================= */
 
 function getStatType(key) {
@@ -205,11 +208,31 @@ function formatLabel(key) {
 export default function Dashboard() {
   const navigate = useNavigate();
 
+  /* =======================================================
+     AUTH USER
+  ======================================================= */
+
+  const { user } = useAuth();
+
+  /* =======================================================
+     REAL ROLES FROM YOUR BACKEND
+     
+     Étudiant   → "etudiant"
+     Entreprise → "entreprise"
+  ======================================================= */
+
+  const isStudent = user?.role === "etudiant";
+  const isCompany = user?.role === "entreprise";
+
+  /* =======================================================
+     STATE
+  ======================================================= */
+
   const [stats, setStats] = useState(null);
   const [charts, setCharts] = useState(null);
 
   /* =======================================================
-     API
+     LOAD DASHBOARD DATA
   ======================================================= */
 
   useEffect(() => {
@@ -246,29 +269,44 @@ export default function Dashboard() {
     return (
       <div className="min-h-[calc(100vh-64px)] bg-[#f5f7f8] flex items-center justify-center">
         <div className="text-center">
-          <div className="w-8 h-8 mx-auto border-[3px] border-[#dcecef] border-t-[#08B7C9] rounded-full animate-spin" />
+
+          <div
+            className="
+              w-8
+              h-8
+              mx-auto
+              border-[3px]
+              border-[#dcecef]
+              border-t-[#08B7C9]
+              rounded-full
+              animate-spin
+            "
+          />
 
           <p className="mt-3 text-sm text-[#819399]">
             Loading...
           </p>
+
         </div>
       </div>
     );
   }
 
   /* =======================================================
-     MAIN
+     RENDER
   ======================================================= */
 
   return (
     <div className="min-h-[calc(100vh-64px)] bg-[#f5f7f8] px-5 md:px-8 py-7">
+
       <div className="max-w-[1150px] mx-auto">
 
         {/* =================================================
-            HEADER DASHBOARD
+            HEADER
         ================================================= */}
 
         <div className="mb-7">
+
           <h1 className="text-[27px] md:text-[30px] font-bold text-[#123F4B]">
             Dashboard
           </h1>
@@ -277,86 +315,114 @@ export default function Dashboard() {
             Consultez les statistiques, les informations importantes
             et les activités récentes depuis votre espace de gestion.
           </p>
+
         </div>
 
         {/* =================================================
-            RECOMMANDATIONS IA
+            AI RECOMMENDATIONS
+            ONLY FOR ETUDIANT
         ================================================= */}
 
-        <div
-          className="
-            mb-7
-            rounded-2xl
-            border
-            border-[#d8f1f3]
-            bg-[#EAFBFC]
-            p-5
-            flex
-            flex-col
-            sm:flex-row
-            sm:items-center
-            sm:justify-between
-            gap-4
-          "
-        >
-          {/* LEFT */}
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span
-                className="
-                  flex
-                  h-8
-                  w-8
-                  shrink-0
-                  items-center
-                  justify-center
-                  rounded-lg
-                  bg-white
-                  text-[#08B7C9]
-                "
-              >
-                ✨
-              </span>
-
-              <h2 className="text-sm font-bold text-[#123F4B]">
-                Recommandations IA
-              </h2>
-            </div>
-
-            <p className="mt-2 max-w-[650px] text-xs leading-5 text-[#526970]">
-              Découvrez les offres de stage les plus adaptées
-              à votre profil, vos compétences et vos préférences.
-            </p>
-          </div>
-
-          {/* BUTTON */}
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate("/recommendations")
-            }
+        {isStudent && (
+          <div
             className="
-              shrink-0
-              rounded-xl
-              bg-[#08B7C9]
-              px-5
-              py-2.5
-              text-xs
-              font-bold
-              text-white
-              shadow-sm
-              transition-all
-              duration-200
-              hover:-translate-y-0.5
-              hover:bg-[#079eae]
-              hover:shadow-md
+              mb-7
+              rounded-2xl
+              border
+              border-[#d8f1f3]
+              bg-[#EAFBFC]
+              p-5
+              flex
+              flex-col
+              sm:flex-row
+              sm:items-center
+              sm:justify-between
+              gap-4
             "
           >
-            Voir mes recommandations
-          </button>
-        </div>
+
+            {/* LEFT */}
+
+            <div className="min-w-0">
+
+              <div className="flex items-center gap-2">
+
+                <span
+                  className="
+                    flex
+                    h-8
+                    w-8
+                    shrink-0
+                    items-center
+                    justify-center
+                    rounded-lg
+                    bg-white
+                    text-[#08B7C9]
+                    text-base
+                  "
+                >
+                  ✨
+                </span>
+
+                <h2 className="text-sm font-bold text-[#123F4B]">
+                  Recommandations IA
+                </h2>
+
+              </div>
+
+              <p className="mt-2 max-w-[650px] text-xs leading-5 text-[#526970]">
+                Découvrez les offres de stage les plus adaptées
+                à votre profil, vos compétences et vos préférences.
+              </p>
+
+            </div>
+
+            {/* BUTTON */}
+
+            <button
+              type="button"
+              onClick={() =>
+                navigate("/recommendations")
+              }
+              className="
+                shrink-0
+                rounded-xl
+                bg-[#08B7C9]
+                px-5
+                py-2.5
+                text-xs
+                font-bold
+                text-white
+                shadow-sm
+                transition-all
+                duration-200
+                hover:-translate-y-0.5
+                hover:bg-[#079eae]
+                hover:shadow-md
+              "
+            >
+              Voir mes recommandations
+            </button>
+
+          </div>
+        )}
+
+        {/* =================================================
+            COMPANY
+            NO AI STUDENT RECOMMENDATIONS
+        ================================================= */}
+
+        {isCompany && (
+          <>
+            {/* 
+              Recommandations IA étudiant intentionally hidden
+              for entreprise.
+
+              Future feature:
+              AI Candidate Matching
+            */}
+          </>
+        )}
 
         {/* =================================================
             STATISTICS
@@ -371,8 +437,10 @@ export default function Dashboard() {
             mb-7
           "
         >
+
           {Object.entries(stats).map(
             ([key, value]) => {
+
               const type =
                 getStatType(key);
 
@@ -383,7 +451,6 @@ export default function Dashboard() {
                     w-full
                     sm:w-[220px]
                     lg:flex-1
-
                     min-w-[190px]
 
                     bg-white
@@ -408,6 +475,7 @@ export default function Dashboard() {
                     duration-300
                   "
                 >
+
                   {/* ICON */}
 
                   <div
@@ -433,19 +501,21 @@ export default function Dashboard() {
                     {value}
                   </div>
 
-                  {/* TITLE */}
+                  {/* LABEL */}
 
                   <div className="mt-2 text-[12px] text-[#819399]">
                     {formatLabel(key)}
                   </div>
+
                 </div>
               );
             }
           )}
+
         </div>
 
         {/* =================================================
-            CHARTS
+            CHARTS GRID
         ================================================= */}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
@@ -462,16 +532,15 @@ export default function Dashboard() {
                 border-[#e4edef]
                 rounded-2xl
                 p-5
-
                 shadow-[0_3px_15px_rgba(18,63,75,0.045)]
-
                 hover:shadow-[0_8px_25px_rgba(18,63,75,0.07)]
-
                 transition-all
                 duration-300
               "
             >
+
               <div className="text-center">
+
                 <h2 className="text-[15px] font-semibold text-[#123F4B]">
                   Candidatures par statut
                 </h2>
@@ -479,13 +548,16 @@ export default function Dashboard() {
                 <p className="text-[11px] text-[#94A4A9] mt-1">
                   Répartition de vos candidatures
                 </p>
+
               </div>
 
               <ResponsiveContainer
                 width="100%"
                 height={280}
               >
+
                 <PieChart>
+
                   <Pie
                     data={
                       charts.candidatures_par_statut
@@ -498,6 +570,7 @@ export default function Dashboard() {
                     outerRadius={88}
                     paddingAngle={3}
                   >
+
                     {charts.candidatures_par_statut.map(
                       (_, index) => (
                         <Cell
@@ -511,6 +584,7 @@ export default function Dashboard() {
                         />
                       )
                     )}
+
                   </Pie>
 
                   <Tooltip
@@ -525,8 +599,11 @@ export default function Dashboard() {
                       fontSize: "11px",
                     }}
                   />
+
                 </PieChart>
+
               </ResponsiveContainer>
+
             </div>
           )}
 
@@ -542,16 +619,15 @@ export default function Dashboard() {
                 border-[#e4edef]
                 rounded-2xl
                 p-5
-
                 shadow-[0_3px_15px_rgba(18,63,75,0.045)]
-
                 hover:shadow-[0_8px_25px_rgba(18,63,75,0.07)]
-
                 transition-all
                 duration-300
               "
             >
+
               <div className="text-center">
+
                 <h2 className="text-[15px] font-semibold text-[#123F4B]">
                   Offres par statut
                 </h2>
@@ -559,13 +635,16 @@ export default function Dashboard() {
                 <p className="text-[11px] text-[#94A4A9] mt-1">
                   Répartition des offres disponibles
                 </p>
+
               </div>
 
               <ResponsiveContainer
                 width="100%"
                 height={280}
               >
+
                 <PieChart>
+
                   <Pie
                     data={
                       charts.offres_par_statut
@@ -578,6 +657,7 @@ export default function Dashboard() {
                     outerRadius={88}
                     paddingAngle={3}
                   >
+
                     {charts.offres_par_statut.map(
                       (_, index) => (
                         <Cell
@@ -591,6 +671,7 @@ export default function Dashboard() {
                         />
                       )
                     )}
+
                   </Pie>
 
                   <Tooltip
@@ -605,39 +686,38 @@ export default function Dashboard() {
                       fontSize: "11px",
                     }}
                   />
+
                 </PieChart>
+
               </ResponsiveContainer>
+
             </div>
           )}
+
         </div>
 
         {/* =================================================
-            MONTHLY APPLICATIONS
+            CANDIDATURES PAR MOIS
         ================================================= */}
 
         {charts.candidatures_par_mois && (
           <div
             className="
               mt-5
-
               bg-white
-
               border
               border-[#e4edef]
-
               rounded-2xl
-
               p-5
-
               shadow-[0_3px_15px_rgba(18,63,75,0.045)]
-
               hover:shadow-[0_8px_25px_rgba(18,63,75,0.07)]
-
               transition-all
               duration-300
             "
           >
+
             <div className="text-center mb-4">
+
               <h2 className="text-[15px] font-semibold text-[#123F4B]">
                 Évolution des candidatures
               </h2>
@@ -645,12 +725,14 @@ export default function Dashboard() {
               <p className="text-[11px] text-[#94A4A9] mt-1">
                 Activité des candidatures au fil des mois
               </p>
+
             </div>
 
             <ResponsiveContainer
               width="100%"
               height={290}
             >
+
               <BarChart
                 data={
                   charts.candidatures_par_mois
@@ -662,6 +744,7 @@ export default function Dashboard() {
                   bottom: 5,
                 }}
               >
+
                 <CartesianGrid
                   stroke="#edf2f3"
                   strokeDasharray="4 4"
@@ -706,10 +789,14 @@ export default function Dashboard() {
                   ]}
                   barSize={30}
                 />
+
               </BarChart>
+
             </ResponsiveContainer>
+
           </div>
         )}
+
       </div>
     </div>
   );

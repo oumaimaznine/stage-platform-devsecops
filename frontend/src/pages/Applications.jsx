@@ -601,10 +601,7 @@ export default function Applications() {
             Candidatures
           </h1>
 
-          <p className="mt-1.5 max-w-[650px] text-[13px] text-[#819399]">
-            Consultez et suivez toutes vos candidatures en un seul
-            endroit.
-          </p>
+        
         </div>
 
         {/* =================================================

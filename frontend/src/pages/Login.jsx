@@ -493,11 +493,11 @@ export default function Login() {
             </h1>
 
             <p className="text-[14px] leading-6 text-white/95 mb-1">
-              Your dedicated space to manage
+         The platform that connects students and companies
             </p>
 
             <p className="text-[14px] leading-6 text-white/95 mb-6">
-              and track your internships.
+           for simple internship management.
             </p>
 
             {/* REGISTER BUTTON */}

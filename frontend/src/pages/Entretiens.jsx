@@ -689,7 +689,7 @@ export default function Entretiens() {
                   !date ||
                   !heure
                 }
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-[#08B7C9] hover:bg-[#079FAF] text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting
                   ? "Planification..."
@@ -851,7 +851,7 @@ export default function Entretiens() {
                             onClick={() =>
                               openRow(ent)
                             }
-                            className="text-purple-600 hover:text-purple-800 text-sm font-medium"
+                            className="text-[#08B7C9] hover:text-[#079FAF] text-sm font-medium"
                           >
                             {isExpanded
                               ? "Fermer"
@@ -993,7 +993,7 @@ export default function Entretiens() {
                                       }
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="inline-flex text-sm text-purple-600 hover:text-purple-800 hover:underline break-all"
+                                     className="inline-flex text-sm text-[#08B7C9] hover:text-[#079FAF] hover:underline break-all"
                                     >
                                       {
                                         ent.lien_visio
@@ -1166,7 +1166,7 @@ export default function Entretiens() {
                                               .value
                                           )
                                         }
-                                        className="bg-white border border-gray-300 p-2 rounded-lg text-sm outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                                        className="bg-white border border-gray-300 p-2 rounded-lg text-sm outline-none focus:border-[#08B7C9] focus:ring-[#08B7C9]"
                                       />
 
                                       <input
@@ -1285,7 +1285,7 @@ export default function Entretiens() {
                                           ent.statut ===
                                           "annule"
                                         }
-                                        className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="bg-[#08B7C9] hover:bg-[#079FAF] text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                       >
                                         Enregistrer
                                       </button>

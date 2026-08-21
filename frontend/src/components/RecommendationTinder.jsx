@@ -78,7 +78,10 @@ function getTiming(dateDebut, dateFin) {
     );
 
     return {
-      label: days <= 1 ? "Débute demain" : `Débute dans ${days} j`,
+      label:
+        days <= 1
+          ? "Débute demain"
+          : `Débute dans ${days} j`,
       tone: "sky",
     };
   }
@@ -97,639 +100,6 @@ function getTiming(dateDebut, dateFin) {
 }
 
 /* =========================================================
-   HELPERS
-========================================================= */
-
-function getOfferId(offer) {
-  return (
-    offer?.offer_id ??
-    offer?.offerId ??
-    offer?.internship_offer_id ??
-    offer?.internshipOfferId ??
-    offer?.offer?.id ??
-    null
-  );
-}
-
-function getCompanyId(offer) {
-  return (
-    offer?.company_id ??
-    offer?.companyId ??
-    offer?.company?.id ??
-    null
-  );
-}
-
-function getValidationMessage(error, fallback) {
-  const responseData = error?.response?.data;
-  const validationErrors = responseData?.errors;
-
-  if (
-    validationErrors &&
-    typeof validationErrors === "object"
-  ) {
-    const firstError = Object.values(validationErrors)?.[0];
-
-    if (Array.isArray(firstError) && firstError.length > 0) {
-      return firstError[0];
-    }
-  }
-
-  return responseData?.message || fallback;
-}
-
-function normalizeScore(value) {
-  return Math.max(
-    0,
-    Math.min(100, Number(value) || 0)
-  );
-}
-
-function normalizeRecommendation(item) {
-  return {
-    ...item,
-
-    company_id:
-      item.company_id ??
-      item.companyId ??
-      item.company?.id ??
-      null,
-
-    offer_id:
-      item.offer_id ??
-      item.offerId ??
-      item.internship_offer_id ??
-      item.internshipOfferId ??
-      item.offer?.id ??
-      item.id ??
-      null,
-
-    score: normalizeScore(item.score),
-
-    is_favorite: Boolean(
-      item.is_favorite ??
-        item.isFavorite ??
-        false
-    ),
-  };
-}
-
-function normalizeRecommendations(data) {
-  return data
-    .map(normalizeRecommendation)
-    .filter((item) => item.offer_id)
-    .sort((a, b) => b.score - a.score);
-}
-
-function getCompetences(value) {
-  if (typeof value === "string") {
-    return value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item).trim())
-      .filter(Boolean);
-  }
-
-  return [];
-}
-
-function getTypeMeta(type) {
-  return (
-    TYPE_META[type] || {
-      label: type || "Stage",
-      tone: "neutral",
-    }
-  );
-}
-
-function getSwipeMessage(type) {
-  return type === "like"
-    ? {
-        message: "Offre ajoutée à vos favoris.",
-        tone: "success",
-      }
-    : {
-        message: "Offre passée.",
-        tone: "info",
-      };
-}
-
-function getSwipeClass(direction) {
-  if (direction === "like") {
-    return "translate-x-[110%] rotate-[4deg] opacity-0";
-  }
-
-  if (direction === "pass") {
-    return "-translate-x-[110%] -rotate-[4deg] opacity-0";
-  }
-
-  return "";
-}
-
-/* =========================================================
-   LOADING STATE
-========================================================= */
-
-function LoadingState() {
-  return (
-    <section className="w-full">
-      <div className="mb-6">
-        <div className="h-3 w-28 animate-pulse rounded bg-[#e4edef]" />
-        <div className="mt-2 h-6 w-64 animate-pulse rounded bg-[#e4edef]" />
-        <div className="mt-2 h-4 w-80 max-w-full animate-pulse rounded bg-[#e4edef]" />
-      </div>
-
-      <div className="h-[520px] w-full animate-pulse bg-[#f5f7f8]" />
-    </section>
-  );
-}
-
-/* =========================================================
-   ERROR STATE
-========================================================= */
-
-function ErrorState({ error }) {
-  return (
-    <section className="w-full">
-      <div className="py-5">
-        <p className="text-sm font-semibold text-red-700">
-          Recommandations IA
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-red-600">
-          {error}
-        </p>
-      </div>
-    </section>
-  );
-}
-
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
-function EmptyState({ onReset }) {
-  return (
-    <section className="w-full">
-      <div className="py-8 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAFBFC] text-[#08B7C9]">
-          <IconBriefcase className="h-5 w-5" />
-        </div>
-
-        <p className="mt-4 text-sm font-bold text-[#123F4B]">
-          Vous avez parcouru toutes les recommandations
-        </p>
-
-        <p className="mx-auto mt-1.5 max-w-md text-xs leading-5 text-[#819399]">
-          L'IA n'a plus d'offre recommandée à vous
-          présenter pour le moment.
-        </p>
-
-        <button
-          type="button"
-          onClick={onReset}
-          className="
-            mt-5
-            rounded-lg
-            bg-[#08B7C9]
-            px-4
-            py-2.5
-            text-xs
-            font-semibold
-            text-white
-            transition
-            hover:bg-[#079eae]
-          "
-        >
-          Revoir les recommandations
-        </button>
-      </div>
-    </section>
-  );
-}
-
-/* =========================================================
-   OFFER HEADER
-========================================================= */
-
-function OfferHeader({ offer, timing, meta }) {
-  return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-      <div className="flex min-w-0 items-center gap-3">
-        <Avatar
-          name={offer.entreprise || "Entreprise"}
-          square
-          size="md"
-        />
-
-        <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-[#123F4B]">
-            {offer.entreprise || "Entreprise"}
-          </p>
-
-          <p className="mt-0.5 flex items-center gap-1 text-[10px] text-[#94A4A9]">
-            <IconBuilding className="h-3 w-3" />
-            Entreprise
-          </p>
-        </div>
-      </div>
-
-      <div className="flex shrink-0 flex-wrap gap-1.5">
-        {timing && (
-          <Badge tone={timing.tone}>
-            {timing.label}
-          </Badge>
-        )}
-
-        <Badge tone={meta.tone}>
-          {meta.label}
-        </Badge>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   SCORE
-========================================================= */
-
-function ScoreSection({ score }) {
-  return (
-    <div className="mt-6 flex flex-col gap-4 border-y border-[#dceff1] py-5 sm:flex-row sm:items-center">
-      <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full border-4 border-[#08B7C9] bg-[#EAFBFC]">
-        <span className="text-lg font-bold leading-none text-[#08B7C9]">
-          {score}%
-        </span>
-
-        <span className="mt-1 text-[8px] font-semibold uppercase tracking-wide text-[#819399]">
-          Match
-        </span>
-      </div>
-
-      <div>
-        <p className="text-sm font-bold text-[#123F4B]">
-          Compatibilité
-        </p>
-
-        <p className="mt-1 text-xs leading-5 text-[#819399]">
-          Cette offre correspond fortement
-          à votre profil selon l'analyse IA.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   COMPETENCES
-========================================================= */
-
-function CompetencesSection({ competences }) {
-  if (competences.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-7">
-      <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#94A4A9]">
-        Compétences recherchées
-      </p>
-
-      <div className="flex flex-wrap gap-1.5">
-        {competences.map((competence, index) => (
-          <span
-            key={`${competence}-${index}`}
-            className="
-              rounded-md
-              border
-              border-[#d8f1f3]
-              bg-[#EAFBFC]
-              px-2.5
-              py-1.5
-              text-[10px]
-              font-medium
-              text-[#08B7C9]
-            "
-          >
-            {competence}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   REASON
-========================================================= */
-
-function ReasonSection({ reason }) {
-  if (!reason) {
-    return null;
-  }
-
-  return (
-    <div className="mt-7 border-l-2 border-[#08B7C9] pl-4">
-      <div className="flex gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAFBFC] text-[#08B7C9]">
-          ✦
-        </div>
-
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-[#123F4B]">
-            Pourquoi cette recommandation ?
-          </p>
-
-          <p className="mt-1.5 text-xs leading-5 text-[#526970]">
-            {reason}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* =========================================================
-   OFFER DATES
-========================================================= */
-
-function OfferDates({ startDate, endDate }) {
-  return (
-    <div className="mt-7 flex items-center gap-2 border-t border-[#edf2f3] pt-5">
-      <IconCalendar className="h-4 w-4 text-[#08B7C9]" />
-
-      <p className="text-xs text-[#819399]">
-        Du{" "}
-        <span className="font-semibold text-[#526970]">
-          {formatDate(startDate)}
-        </span>
-        {" "}au{" "}
-        <span className="font-semibold text-[#526970]">
-          {formatDate(endDate)}
-        </span>
-      </p>
-    </div>
-  );
-}
-
-/* =========================================================
-   OFFER CONTENT
-========================================================= */
-
-function OfferContent({ offer }) {
-  const meta = getTypeMeta(offer.type);
-  const timing = getTiming(
-    offer.date_debut,
-    offer.date_fin
-  );
-
-  const competences = getCompetences(
-    offer.competences_requises
-  );
-
-  return (
-    <div className="py-6">
-      <OfferHeader
-        offer={offer}
-        timing={timing}
-        meta={meta}
-      />
-
-      <div className="mt-7">
-        <h3 className="text-2xl font-bold leading-tight tracking-tight text-[#123F4B] md:text-[28px]">
-          {offer.titre}
-        </h3>
-      </div>
-
-      <ScoreSection score={offer.score} />
-
-      <div className="mt-7">
-        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#94A4A9]">
-          À propos de l'offre
-        </p>
-
-        <p className="mt-2 max-w-4xl text-sm leading-6 text-[#526970]">
-          {offer.description ||
-            "Aucune description disponible."}
-        </p>
-      </div>
-
-      <CompetencesSection
-        competences={competences}
-      />
-
-      <ReasonSection reason={offer.raison} />
-
-      <OfferDates
-        startDate={offer.date_debut}
-        endDate={offer.date_fin}
-      />
-    </div>
-  );
-}
-
-/* =========================================================
-   ACTION BUTTONS
-========================================================= */
-
-function ActionButtons({
-  currentOffer,
-  animating,
-  applying,
-  favoriting,
-  onSwipe,
-  onApply,
-  onFavorite,
-  onContact,
-}) {
-  const disabled =
-    animating || applying || favoriting;
-
-  const favoriteDisabled =
-    disabled || currentOffer.is_favorite;
-
-  const favoriteTitle = currentOffer.is_favorite
-    ? "Déjà dans vos favoris"
-    : "Ajouter aux favoris";
-
-  const favoriteClasses = currentOffer.is_favorite
-    ? "border-[#08B7C9] bg-[#EAFBFC] text-[#08B7C9]"
-    : "border-[#bde9df] bg-[#effbf8] text-[#22C55E] hover:bg-[#dcf8f0]";
-
-  const favoriteContent = favoriting
-    ? "…"
-    : "♥";
-
-  return (
-    <div className="border-t border-[#e4edef] py-5">
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onSwipe("pass")}
-          className="
-            flex
-            h-12
-            w-12
-            items-center
-            justify-center
-            rounded-full
-            border
-            border-[#e4edef]
-            bg-white
-            text-lg
-            text-[#819399]
-            shadow-sm
-            transition
-            hover:-translate-y-1
-            hover:border-red-200
-            hover:bg-red-50
-            hover:text-red-500
-            disabled:cursor-not-allowed
-            disabled:opacity-50
-          "
-          title="Passer"
-        >
-          ✕
-        </button>
-
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => onApply(currentOffer)}
-          className="
-            flex
-            h-11
-            min-w-[120px]
-            items-center
-            justify-center
-            gap-2
-            rounded-full
-            bg-[#08B7C9]
-            px-6
-            text-[11px]
-            font-bold
-            text-white
-            shadow-md
-            shadow-[#08B7C9]/20
-            transition
-            hover:-translate-y-0.5
-            hover:bg-[#079eae]
-            disabled:cursor-not-allowed
-            disabled:opacity-50
-          "
-        >
-          <IconBriefcase className="h-3.5 w-3.5" />
-          {applying ? "Envoi..." : "Postuler"}
-        </button>
-
-        <button
-          type="button"
-          disabled={favoriteDisabled}
-          onClick={() => onFavorite(currentOffer)}
-          className={`
-            flex
-            h-12
-            w-12
-            items-center
-            justify-center
-            rounded-full
-            border
-            shadow-sm
-            transition
-            hover:-translate-y-1
-            disabled:cursor-not-allowed
-            disabled:opacity-50
-            ${favoriteClasses}
-          `}
-          title={favoriteTitle}
-        >
-          {favoriteContent}
-        </button>
-      </div>
-
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={onContact}
-        className="
-          mx-auto
-          mt-3
-          flex
-          items-center
-          gap-1.5
-          rounded-lg
-          px-3
-          py-1.5
-          text-[10px]
-          font-semibold
-          text-[#08B7C9]
-          transition
-          hover:bg-[#EAFBFC]
-          disabled:opacity-50
-        "
-      >
-        <IconMessageCircle className="h-3 w-3" />
-        Contacter l'entreprise
-      </button>
-
-      <p className="mt-2 text-center text-[9px] text-[#b0bdc1]">
-        ← Passer&nbsp;&nbsp;&nbsp; → J'aime
-      </p>
-    </div>
-  );
-}
-
-/* =========================================================
-   OFFER CARD
-========================================================= */
-
-function OfferCard({
-  currentOffer,
-  direction,
-  animating,
-  applying,
-  favoriting,
-  onSwipe,
-  onApply,
-  onFavorite,
-  onContact,
-}) {
-  const swipeClass = getSwipeClass(direction);
-
-  return (
-    <div
-      className={`
-        w-full
-        transition-all
-        duration-300
-        ${swipeClass}
-      `}
-    >
-      <div className="h-1 w-full rounded-full bg-[#08B7C9]" />
-
-      <OfferContent offer={currentOffer} />
-
-      <ActionButtons
-        currentOffer={currentOffer}
-        animating={animating}
-        applying={applying}
-        favoriting={favoriting}
-        onSwipe={onSwipe}
-        onApply={onApply}
-        onFavorite={onFavorite}
-        onContact={onContact}
-      />
-    </div>
-  );
-}
-
-/* =========================================================
    COMPONENT
 ========================================================= */
 
@@ -740,29 +110,17 @@ export default function RecommendationTinder({
   const { notify } = useToast();
   const navigate = useNavigate();
 
-  const [recommendations, setRecommendations] =
-    useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const [currentIndex, setCurrentIndex] =
-    useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [loading, setLoading] =
-    useState(true);
+  const [direction, setDirection] = useState(null);
+  const [animating, setAnimating] = useState(false);
 
-  const [error, setError] =
-    useState("");
-
-  const [direction, setDirection] =
-    useState(null);
-
-  const [animating, setAnimating] =
-    useState(false);
-
-  const [applying, setApplying] =
-    useState(false);
-
-  const [favoriting, setFavoriting] =
-    useState(false);
+  const [applying, setApplying] = useState(false);
+  const [favoriting, setFavoriting] = useState(false);
 
   /* =======================================================
      LOAD RECOMMENDATIONS
@@ -777,60 +135,110 @@ export default function RecommendationTinder({
 
     let mounted = true;
 
-    const loadRecommendations =
-      async () => {
-        setLoading(true);
-        setError("");
+    const loadRecommendations = async () => {
+      setLoading(true);
+      setError("");
 
-        try {
-          const response =
-            await api.get(
-              `/students/${studentId}/recommendations`
-            );
+      try {
+        const response = await api.get(
+          `/students/${studentId}/recommendations`
+        );
 
-          if (!mounted) {
-            return;
-          }
-
-          const data =
-            response?.data?.recommendations ??
-            [];
-
-          console.log(
-            "Recommandations reçues :",
-            data
-          );
-
-          const normalized =
-            normalizeRecommendations(data);
-
-          console.log(
-            "Recommandations normalisées :",
-            normalized
-          );
-
-          setRecommendations(normalized);
-          setCurrentIndex(0);
-        } catch (err) {
-          console.error(
-            "Erreur recommandations IA :",
-            err?.response?.data || err
-          );
-
-          if (!mounted) {
-            return;
-          }
-
-          setError(
-            err?.response?.data?.message ||
-              "Impossible de charger les recommandations IA."
-          );
-        } finally {
-          if (mounted) {
-            setLoading(false);
-          }
+        if (!mounted) {
+          return;
         }
-      };
+
+        const data =
+          response?.data?.recommendations ?? [];
+
+        console.log(
+          "Recommandations reçues :",
+          data
+        );
+
+        const normalized = data
+          .map((item) => ({
+            ...item,
+
+            /* ==========================================
+               ID ENTREPRISE
+            ========================================== */
+
+            company_id:
+              item.company_id ??
+              item.companyId ??
+              item.company?.id ??
+              null,
+
+            /* ==========================================
+               ID OFFRE
+            ========================================== */
+
+            offer_id:
+              item.offer_id ??
+              item.offerId ??
+              item.internship_offer_id ??
+              item.internshipOfferId ??
+              item.offer?.id ??
+              item.id ??
+              null,
+
+            /* ==========================================
+               SCORE
+            ========================================== */
+
+            score: Math.max(
+              0,
+              Math.min(
+                100,
+                Number(item.score) || 0
+              )
+            ),
+
+            /* ==========================================
+               FAVORI
+            ========================================== */
+
+            is_favorite:
+              Boolean(
+                item.is_favorite ??
+                item.isFavorite ??
+                false
+              ),
+          }))
+          .filter((item) => item.offer_id)
+          .sort(
+            (a, b) =>
+              b.score - a.score
+          );
+
+        console.log(
+          "Recommandations normalisées :",
+          normalized
+        );
+
+        setRecommendations(normalized);
+        setCurrentIndex(0);
+      } catch (err) {
+        console.error(
+          "Erreur recommandations IA :",
+          err?.response?.data || err
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        setError(
+          err?.response?.data?.message ||
+            "Impossible de charger les recommandations IA."
+        );
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
 
     loadRecommendations();
 
@@ -856,6 +264,7 @@ export default function RecommendationTinder({
   const goNext = () => {
     setDirection(null);
     setAnimating(false);
+
     setCurrentIndex(
       (index) => index + 1
     );
@@ -879,13 +288,22 @@ export default function RecommendationTinder({
     setAnimating(true);
 
     window.setTimeout(() => {
-      const result =
-        getSwipeMessage(type);
-
-      notify(
-        result.message,
-        result.tone
-      );
+      if (type === "like") {
+        /*
+         * Le favori est enregistré dans handleFavorite.
+         * Cette fonction est utilisée seulement pour
+         * le passage visuel.
+         */
+        notify(
+          "Offre ajoutée à vos favoris.",
+          "success"
+        );
+      } else {
+        notify(
+          "Offre passée.",
+          "info"
+        );
+      }
 
       goNext();
     }, 300);
@@ -895,131 +313,153 @@ export default function RecommendationTinder({
      FAVORITE
   ======================================================= */
 
-  const handleFavorite =
-    async (offer) => {
+  const handleFavorite = async (offer) => {
+    if (
+      !offer ||
+      favoriting ||
+      animating ||
+      applying
+    ) {
+      return;
+    }
+
+    const offerId =
+      offer.offer_id ??
+      offer.offerId ??
+      offer.internship_offer_id ??
+      offer.internshipOfferId ??
+      offer.offer?.id ??
+      null;
+
+    if (!offerId) {
+      console.error(
+        "offer_id absent :",
+        offer
+      );
+
+      notify(
+        "Impossible d'ajouter cette offre aux favoris.",
+        "error"
+      );
+
+      return;
+    }
+
+    setFavoriting(true);
+
+    try {
+      const payload = {
+        internship_offer_id: Number(offerId),
+      };
+
+      console.log(
+        "Ajout favori - payload :",
+        payload
+      );
+
+      const response = await api.post(
+        "/favorites",
+        payload
+      );
+
+      console.log(
+        "Favori créé :",
+        response.data
+      );
+
+      /*
+       * Mise à jour locale
+       */
+
+      setRecommendations((previous) =>
+        previous.map((item) =>
+          item.offer_id === Number(offerId)
+            ? {
+                ...item,
+                is_favorite: true,
+              }
+            : item
+        )
+      );
+
+      /*
+       * Animation Tinder
+       */
+
+      setDirection("like");
+      setAnimating(true);
+
+      window.setTimeout(() => {
+        notify(
+          response?.data?.message ||
+            "Offre ajoutée à vos favoris.",
+          "success"
+        );
+
+        goNext();
+      }, 300);
+    } catch (err) {
+      console.error(
+        "Erreur ajout favori :",
+        err?.response?.data || err
+      );
+
+      const validationErrors =
+        err?.response?.data?.errors;
+
+      let message =
+        err?.response?.data?.message ||
+        "Impossible d'ajouter cette offre aux favoris.";
+
       if (
-        !offer ||
-        favoriting ||
-        animating ||
-        applying
+        validationErrors &&
+        typeof validationErrors === "object"
       ) {
-        return;
+        const firstError =
+          Object.values(
+            validationErrors
+          )?.[0];
+
+        if (
+          Array.isArray(firstError) &&
+          firstError.length > 0
+        ) {
+          message = firstError[0];
+        }
       }
 
-      const offerId =
-        getOfferId(offer);
-
-      if (!offerId) {
-        console.error(
-          "offer_id absent :",
-          offer
-        );
-
-        notify(
-          "Impossible d'ajouter cette offre aux favoris.",
-          "error"
-        );
-
-        return;
-      }
-
-      setFavoriting(true);
-
-      try {
-        const payload = {
-          internship_offer_id:
-            Number(offerId),
-        };
-
-        console.log(
-          "Ajout favori - payload :",
-          payload
-        );
-
-        const response =
-          await api.post(
-            "/favorites",
-            payload
-          );
-
-        console.log(
-          "Favori créé :",
-          response.data
-        );
-
-        setRecommendations(
-          (previous) =>
-            previous.map((item) =>
-              item.offer_id ===
-              Number(offerId)
-                ? {
-                    ...item,
-                    is_favorite: true,
-                  }
-                : item
-            )
-        );
-
-        setDirection("like");
-        setAnimating(true);
-
-        window.setTimeout(() => {
-          notify(
-            response?.data?.message ||
-              "Offre ajoutée à vos favoris.",
-            "success"
-          );
-
-          goNext();
-        }, 300);
-      } catch (err) {
-        console.error(
-          "Erreur ajout favori :",
-          err?.response?.data || err
-        );
-
-        notify(
-          getValidationMessage(
-            err,
-            "Impossible d'ajouter cette offre aux favoris."
-          ),
-          "error"
-        );
-      } finally {
-        setFavoriting(false);
-      }
-    };
+      notify(
+        message,
+        "error"
+      );
+    } finally {
+      setFavoriting(false);
+    }
+  };
 
   /* =======================================================
      KEYBOARD
   ======================================================= */
 
   useEffect(() => {
-    const handleKeyDown =
-      (event) => {
-        if (
-          !currentOffer ||
-          animating ||
-          applying ||
-          favoriting
-        ) {
-          return;
-        }
+    const handleKeyDown = (event) => {
+      if (
+        !currentOffer ||
+        animating ||
+        applying ||
+        favoriting
+      ) {
+        return;
+      }
 
-        if (
-          event.key === "ArrowLeft"
-        ) {
-          handleSwipe("pass");
-        }
+      if (event.key === "ArrowLeft") {
+        handleSwipe("pass");
+      }
 
-        if (
-          event.key === "ArrowRight"
-        ) {
-          handleFavorite(
-            currentOffer
-          );
-        }
-      };
+      if (event.key === "ArrowRight") {
+        handleFavorite(currentOffer);
+      }
+    };
 
     window.addEventListener(
       "keydown",
@@ -1040,209 +480,333 @@ export default function RecommendationTinder({
   ]);
 
   /* =======================================================
-     APPLY
+     POSTULER
   ======================================================= */
 
-  const handleApply =
-    async (offer) => {
-      if (!offer) {
-        return;
+  const handleApply = async (offer) => {
+    if (!offer) {
+      return;
+    }
+
+    const offerId =
+      offer.offer_id ??
+      offer.offerId ??
+      offer.internship_offer_id ??
+      offer.internshipOfferId ??
+      offer.offer?.id ??
+      null;
+
+    if (!offerId) {
+      console.error(
+        "offer_id absent :",
+        offer
+      );
+
+      notify(
+        "Impossible de postuler : l'identifiant de l'offre est manquant.",
+        "error"
+      );
+
+      return;
+    }
+
+    if (
+      applying ||
+      animating ||
+      favoriting
+    ) {
+      return;
+    }
+
+    setApplying(true);
+
+    try {
+      const payload = {
+        internship_offer_id:
+          Number(offerId),
+      };
+
+      console.log(
+        "Candidature - payload :",
+        payload
+      );
+
+      const response = await api.post(
+        "/applications",
+        payload
+      );
+
+      console.log(
+        "Candidature créée :",
+        response.data
+      );
+
+      notify(
+        response?.data?.message ||
+          "Votre candidature a été envoyée avec succès.",
+        "success"
+      );
+
+      if (typeof onApply === "function") {
+        onApply(offer);
       }
+    } catch (err) {
+      console.error(
+        "Erreur candidature :",
+        err?.response?.data || err
+      );
 
-      const offerId =
-        getOfferId(offer);
+      const validationErrors =
+        err?.response?.data?.errors;
 
-      if (!offerId) {
-        console.error(
-          "offer_id absent :",
-          offer
-        );
-
-        notify(
-          "Impossible de postuler : l'identifiant de l'offre est manquant.",
-          "error"
-        );
-
-        return;
-      }
+      let message =
+        err?.response?.data?.message ||
+        "Impossible d'envoyer votre candidature.";
 
       if (
-        applying ||
-        animating ||
-        favoriting
+        validationErrors &&
+        typeof validationErrors === "object"
       ) {
-        return;
-      }
-
-      setApplying(true);
-
-      try {
-        const payload = {
-          internship_offer_id:
-            Number(offerId),
-        };
-
-        console.log(
-          "Candidature - payload :",
-          payload
-        );
-
-        const response =
-          await api.post(
-            "/applications",
-            payload
-          );
-
-        console.log(
-          "Candidature créée :",
-          response.data
-        );
-
-        notify(
-          response?.data?.message ||
-            "Votre candidature a été envoyée avec succès.",
-          "success"
-        );
+        const firstError =
+          Object.values(
+            validationErrors
+          )?.[0];
 
         if (
-          typeof onApply ===
-          "function"
+          Array.isArray(firstError) &&
+          firstError.length > 0
         ) {
-          onApply(offer);
+          message = firstError[0];
         }
-      } catch (err) {
-        console.error(
-          "Erreur candidature :",
-          err?.response?.data || err
-        );
-
-        notify(
-          getValidationMessage(
-            err,
-            "Impossible d'envoyer votre candidature."
-          ),
-          "error"
-        );
-      } finally {
-        setApplying(false);
       }
-    };
+
+      notify(
+        message,
+        "error"
+      );
+    } finally {
+      setApplying(false);
+    }
+  };
 
   /* =======================================================
      CONVERSATION
   ======================================================= */
 
-  const startConversation =
-    async () => {
-      if (
-        !currentOffer ||
-        animating ||
-        applying ||
-        favoriting
-      ) {
-        return;
-      }
+  const startConversation = async () => {
+    if (
+      !currentOffer ||
+      animating ||
+      applying ||
+      favoriting
+    ) {
+      return;
+    }
 
-      const companyId =
-        getCompanyId(currentOffer);
+    const companyId =
+      currentOffer.company_id ??
+      currentOffer.companyId ??
+      currentOffer.company?.id ??
+      null;
 
-      const offerId =
-        getOfferId(currentOffer);
+    const offerId =
+      currentOffer.offer_id ??
+      currentOffer.offerId ??
+      currentOffer.internship_offer_id ??
+      currentOffer.internshipOfferId ??
+      currentOffer.offer?.id ??
+      null;
 
-      console.log(
-        "Conversation - currentOffer :",
+    console.log(
+      "Conversation - currentOffer :",
+      currentOffer
+    );
+
+    console.log(
+      "Conversation - company_id :",
+      companyId
+    );
+
+    console.log(
+      "Conversation - internship_offer_id :",
+      offerId
+    );
+
+    if (!companyId) {
+      console.error(
+        "company_id absent dans la recommandation :",
         currentOffer
       );
 
+      notify(
+        "Impossible de contacter l'entreprise : l'identifiant de l'entreprise est manquant.",
+        "error"
+      );
+
+      return;
+    }
+
+    try {
+      const payload = {
+        company_id: Number(companyId),
+      };
+
+      if (offerId) {
+        payload.internship_offer_id =
+          Number(offerId);
+      }
+
       console.log(
-        "Conversation - company_id :",
-        companyId
+        "Payload envoyé à /conversations :",
+        payload
+      );
+
+      const response = await api.post(
+        "/conversations",
+        payload
       );
 
       console.log(
-        "Conversation - internship_offer_id :",
-        offerId
+        "Conversation créée :",
+        response.data
       );
 
-      if (!companyId) {
-        console.error(
-          "company_id absent dans la recommandation :",
-          currentOffer
-        );
+      navigate(
+        `/messages?conversation=${response.data.id}`
+      );
+    } catch (err) {
+      console.error(
+        "Erreur conversation :",
+        err?.response?.data || err
+      );
 
-        notify(
-          "Impossible de contacter l'entreprise : l'identifiant de l'entreprise est manquant.",
-          "error"
-        );
-
-        return;
-      }
-
-      try {
-        const payload = {
-          company_id:
-            Number(companyId),
-        };
-
-        if (offerId) {
-          payload.internship_offer_id =
-            Number(offerId);
-        }
-
-        console.log(
-          "Payload envoyé à /conversations :",
-          payload
-        );
-
-        const response =
-          await api.post(
-            "/conversations",
-            payload
-          );
-
-        console.log(
-          "Conversation créée :",
-          response.data
-        );
-
-        navigate(
-          `/messages?conversation=${response.data.id}`
-        );
-      } catch (err) {
-        console.error(
-          "Erreur conversation :",
-          err?.response?.data || err
-        );
-
-        notify(
-          err?.response?.data?.message ||
-            "Impossible de démarrer la conversation.",
-          "error"
-        );
-      }
-    };
+      notify(
+        err?.response?.data?.message ||
+          "Impossible de démarrer la conversation.",
+        "error"
+      );
+    }
+  };
 
   /* =======================================================
-     RENDER STATES
+     LOADING
   ======================================================= */
 
   if (loading) {
-    return <LoadingState />;
+    return (
+      <section className="w-full">
+        <div className="mb-6">
+          <div className="h-3 w-28 animate-pulse rounded bg-[#e4edef]" />
+
+          <div className="mt-2 h-6 w-64 animate-pulse rounded bg-[#e4edef]" />
+
+          <div className="mt-2 h-4 w-80 max-w-full animate-pulse rounded bg-[#e4edef]" />
+        </div>
+
+        <div className="h-[520px] w-full animate-pulse bg-[#f5f7f8]" />
+      </section>
+    );
   }
 
+  /* =======================================================
+     ERROR
+  ======================================================= */
+
   if (error) {
-    return <ErrorState error={error} />;
+    return (
+      <section className="w-full">
+        <div className="py-5">
+          <p className="text-sm font-semibold text-red-700">
+            Recommandations IA
+          </p>
+
+          <p className="mt-1 text-xs leading-5 text-red-600">
+            {error}
+          </p>
+        </div>
+      </section>
+    );
   }
+
+  /* =======================================================
+     NO RECOMMENDATIONS
+  ======================================================= */
 
   if (!currentOffer) {
     return (
-      <EmptyState
-        onReset={() => {
-          setCurrentIndex(0);
-        }}
-      />
+      <section className="w-full">
+        <div className="py-8 text-center">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#EAFBFC] text-[#08B7C9]">
+            <IconBriefcase className="h-5 w-5" />
+          </div>
+
+          <p className="mt-4 text-sm font-bold text-[#123F4B]">
+            Vous avez parcouru toutes les recommandations
+          </p>
+
+          <p className="mx-auto mt-1.5 max-w-md text-xs leading-5 text-[#819399]">
+            L'IA n'a plus d'offre recommandée à vous
+            présenter pour le moment.
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              setCurrentIndex(0);
+            }}
+            className="
+              mt-5
+              rounded-lg
+              bg-[#08B7C9]
+              px-4
+              py-2.5
+              text-xs
+              font-semibold
+              text-white
+              transition
+              hover:bg-[#079eae]
+            "
+          >
+            Revoir les recommandations
+          </button>
+        </div>
+      </section>
     );
   }
+
+  /* =======================================================
+     OFFER DATA
+  ======================================================= */
+
+  const meta =
+    TYPE_META[currentOffer.type] || {
+      label:
+        currentOffer.type ||
+        "Stage",
+      tone: "neutral",
+    };
+
+  const timing = getTiming(
+    currentOffer.date_debut,
+    currentOffer.date_fin
+  );
+
+  const competences =
+    typeof currentOffer.competences_requises ===
+    "string"
+      ? currentOffer.competences_requises
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : Array.isArray(
+          currentOffer.competences_requises
+        )
+      ? currentOffer.competences_requises
+          .map((item) =>
+            String(item).trim()
+          )
+          .filter(Boolean)
+      : [];
 
   /* =======================================================
      RENDER
@@ -1250,10 +814,16 @@ export default function RecommendationTinder({
 
   return (
     <section className="w-full">
-      {/* HEADER */}
+
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <div className="mb-7 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+
         <div>
           <div className="mb-2 flex items-center gap-2">
+
             <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#EAFBFC] text-[#08B7C9]">
               ✨
             </span>
@@ -1261,6 +831,7 @@ export default function RecommendationTinder({
             <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#08B7C9]">
               Recommandations IA
             </span>
+
           </div>
 
           <h2 className="text-xl font-bold tracking-tight text-[#123F4B]">
@@ -1277,24 +848,418 @@ export default function RecommendationTinder({
           {currentIndex + 1} /{" "}
           {recommendations.length}
         </div>
+
       </div>
 
-      {/* OFFER */}
-      <OfferCard
-        currentOffer={currentOffer}
-        direction={direction}
-        animating={animating}
-        applying={applying}
-        favoriting={favoriting}
-        onSwipe={handleSwipe}
-        onApply={handleApply}
-        onFavorite={handleFavorite}
-        onContact={startConversation}
-      />
+      {/* =================================================
+          CONTENT
+      ================================================= */}
 
-      {/* PROGRESS */}
+      <div
+        className={`
+          w-full
+          transition-all
+          duration-300
+          ${
+            direction === "like"
+              ? "translate-x-[110%] rotate-[4deg] opacity-0"
+              : direction === "pass"
+              ? "-translate-x-[110%] -rotate-[4deg] opacity-0"
+              : ""
+          }
+        `}
+      >
+
+        <div className="h-1 w-full rounded-full bg-[#08B7C9]" />
+
+        <div className="py-6">
+
+          {/* HEADER OFFER */}
+
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+
+            <div className="flex min-w-0 items-center gap-3">
+
+              <Avatar
+                name={
+                  currentOffer.entreprise ||
+                  "Entreprise"
+                }
+                square
+                size="md"
+              />
+
+              <div className="min-w-0">
+
+                <p className="truncate text-sm font-semibold text-[#123F4B]">
+                  {currentOffer.entreprise ||
+                    "Entreprise"}
+                </p>
+
+                <p className="mt-0.5 flex items-center gap-1 text-[10px] text-[#94A4A9]">
+                  <IconBuilding className="h-3 w-3" />
+                  Entreprise
+                </p>
+
+              </div>
+
+            </div>
+
+            <div className="flex shrink-0 flex-wrap gap-1.5">
+
+              {timing && (
+                <Badge tone={timing.tone}>
+                  {timing.label}
+                </Badge>
+              )}
+
+              <Badge tone={meta.tone}>
+                {meta.label}
+              </Badge>
+
+            </div>
+
+          </div>
+
+          {/* TITLE */}
+
+          <div className="mt-7">
+
+            <h3 className="text-2xl font-bold leading-tight tracking-tight text-[#123F4B] md:text-[28px]">
+              {currentOffer.titre}
+            </h3>
+
+          </div>
+
+          {/* SCORE */}
+
+          <div className="mt-6 flex flex-col gap-4 border-y border-[#dceff1] py-5 sm:flex-row sm:items-center">
+
+            <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-full border-4 border-[#08B7C9] bg-[#EAFBFC]">
+
+              <span className="text-lg font-bold leading-none text-[#08B7C9]">
+                {currentOffer.score}%
+              </span>
+
+              <span className="mt-1 text-[8px] font-semibold uppercase tracking-wide text-[#819399]">
+                Match
+              </span>
+
+            </div>
+
+            <div>
+
+              <p className="text-sm font-bold text-[#123F4B]">
+                Compatibilité
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-[#819399]">
+                Cette offre correspond fortement
+                à votre profil selon l'analyse IA.
+              </p>
+
+            </div>
+
+          </div>
+
+          {/* DESCRIPTION */}
+
+          <div className="mt-7">
+
+            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#94A4A9]">
+              À propos de l'offre
+            </p>
+
+            <p className="mt-2 max-w-4xl text-sm leading-6 text-[#526970]">
+              {currentOffer.description ||
+                "Aucune description disponible."}
+            </p>
+
+          </div>
+
+          {/* COMPETENCES */}
+
+          {competences.length > 0 && (
+            <div className="mt-7">
+
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#94A4A9]">
+                Compétences recherchées
+              </p>
+
+              <div className="flex flex-wrap gap-1.5">
+
+                {competences.map(
+                  (competence, index) => (
+                    <span
+                      key={`${competence}-${index}`}
+                      className="
+                        rounded-md
+                        border
+                        border-[#d8f1f3]
+                        bg-[#EAFBFC]
+                        px-2.5
+                        py-1.5
+                        text-[10px]
+                        font-medium
+                        text-[#08B7C9]
+                      "
+                    >
+                      {competence}
+                    </span>
+                  )
+                )}
+
+              </div>
+
+            </div>
+          )}
+
+          {/* REASON */}
+
+          {currentOffer.raison && (
+            <div className="mt-7 border-l-2 border-[#08B7C9] pl-4">
+
+              <div className="flex gap-3">
+
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAFBFC] text-[#08B7C9]">
+                  ✦
+                </div>
+
+                <div className="min-w-0">
+
+                  <p className="text-sm font-bold text-[#123F4B]">
+                    Pourquoi cette recommandation ?
+                  </p>
+
+                  <p className="mt-1.5 text-xs leading-5 text-[#526970]">
+                    {currentOffer.raison}
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+          )}
+
+          {/* DATES */}
+
+          <div className="mt-7 flex items-center gap-2 border-t border-[#edf2f3] pt-5">
+
+            <IconCalendar className="h-4 w-4 text-[#08B7C9]" />
+
+            <p className="text-xs text-[#819399]">
+
+              Du{" "}
+
+              <span className="font-semibold text-[#526970]">
+                {formatDate(
+                  currentOffer.date_debut
+                )}
+              </span>
+
+              {" "}au{" "}
+
+              <span className="font-semibold text-[#526970]">
+                {formatDate(
+                  currentOffer.date_fin
+                )}
+              </span>
+
+            </p>
+
+          </div>
+
+        </div>
+
+        {/* =================================================
+            ACTIONS
+        ================================================= */}
+
+        <div className="border-t border-[#e4edef] py-5">
+
+          <div className="flex flex-wrap items-center justify-center gap-4">
+
+            {/* PASS */}
+
+            <button
+              type="button"
+              disabled={
+                animating ||
+                applying ||
+                favoriting
+              }
+              onClick={() =>
+                handleSwipe("pass")
+              }
+              className="
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-[#e4edef]
+                bg-white
+                text-lg
+                text-[#819399]
+                shadow-sm
+                transition
+                hover:-translate-y-1
+                hover:border-red-200
+                hover:bg-red-50
+                hover:text-red-500
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+              title="Passer"
+            >
+              ✕
+            </button>
+
+            {/* POSTULER */}
+
+            <button
+              type="button"
+              disabled={
+                animating ||
+                applying ||
+                favoriting
+              }
+              onClick={() =>
+                handleApply(currentOffer)
+              }
+              className="
+                flex
+                h-11
+                min-w-[120px]
+                items-center
+                justify-center
+                gap-2
+                rounded-full
+                bg-[#08B7C9]
+                px-6
+                text-[11px]
+                font-bold
+                text-white
+                shadow-md
+                shadow-[#08B7C9]/20
+                transition
+                hover:-translate-y-0.5
+                hover:bg-[#079eae]
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+            >
+
+              <IconBriefcase className="h-3.5 w-3.5" />
+
+              {applying
+                ? "Envoi..."
+                : "Postuler"}
+
+            </button>
+
+            {/* LIKE / FAVORITE */}
+
+            <button
+              type="button"
+              disabled={
+                animating ||
+                applying ||
+                favoriting ||
+                currentOffer.is_favorite
+              }
+              onClick={() =>
+                handleFavorite(currentOffer)
+              }
+              className={`
+                flex
+                h-12
+                w-12
+                items-center
+                justify-center
+                rounded-full
+                border
+                shadow-sm
+                transition
+                hover:-translate-y-1
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+                ${
+                  currentOffer.is_favorite
+                    ? "border-[#08B7C9] bg-[#EAFBFC] text-[#08B7C9]"
+                    : "border-[#bde9df] bg-[#effbf8] text-[#22C55E] hover:bg-[#dcf8f0]"
+                }
+              `}
+              title={
+                currentOffer.is_favorite
+                  ? "Déjà dans vos favoris"
+                  : "Ajouter aux favoris"
+              }
+            >
+              {favoriting
+                ? "…"
+                : currentOffer.is_favorite
+                ? "♥"
+                : "♥"}
+            </button>
+
+          </div>
+
+          {/* CONTACT */}
+
+          <button
+            type="button"
+            disabled={
+              animating ||
+              applying ||
+              favoriting
+            }
+            onClick={
+              startConversation
+            }
+            className="
+              mx-auto
+              mt-3
+              flex
+              items-center
+              gap-1.5
+              rounded-lg
+              px-3
+              py-1.5
+              text-[10px]
+              font-semibold
+              text-[#08B7C9]
+              transition
+              hover:bg-[#EAFBFC]
+              disabled:opacity-50
+            "
+          >
+
+            <IconMessageCircle className="h-3 w-3" />
+
+            Contacter l'entreprise
+
+          </button>
+
+          <p className="mt-2 text-center text-[9px] text-[#b0bdc1]">
+            ← Passer&nbsp;&nbsp;&nbsp; → J'aime
+          </p>
+
+        </div>
+
+      </div>
+
+      {/* =================================================
+          PROGRESS
+      ================================================= */}
+
       <div className="mt-5 flex items-center gap-2">
+
         <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[#e9eff0]">
+
           <div
             className="h-full rounded-full bg-[#08B7C9] transition-all duration-500"
             style={{
@@ -1305,15 +1270,21 @@ export default function RecommendationTinder({
               }%`,
             }}
           />
+
         </div>
 
         <span className="shrink-0 text-[9px] font-semibold text-[#94A4A9]">
+
           {remaining}{" "}
+
           {remaining > 1
             ? "offres restantes"
             : "offre restante"}
+
         </span>
+
       </div>
+
     </section>
   );
 }

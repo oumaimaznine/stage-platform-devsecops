@@ -4,14 +4,51 @@ export default function FloatingChatButton() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // On cache le bouton si on est déjà sur la page Messages
-  if (location.pathname.startsWith("/messages")) return null;
+  // Masquer le bouton si on est déjà sur la page Messages
+  if (location.pathname.startsWith("/messages")) {
+    return null;
+  }
 
   return (
     <button
+      type="button"
       onClick={() => navigate("/messages")}
-      className="fixed bottom-6 right-6 z-50 bg-primary-600 hover:bg-primary-700 text-white w-14 h-14 rounded-full shadow-lg shadow-black/40 flex items-center justify-center transition hover:scale-105"
+      aria-label="Ouvrir les messages"
       title="Messages"
+      className="
+        fixed
+        bottom-6
+        right-6
+        z-50
+
+        w-14
+        h-14
+
+        rounded-full
+
+        bg-[#08B7C9]
+        hover:bg-[#079FAF]
+
+        text-white
+
+        flex
+        items-center
+        justify-center
+
+        shadow-[0_8px_25px_rgba(8,183,201,0.28)]
+
+        transition-all
+        duration-200
+
+        hover:scale-105
+        hover:-translate-y-0.5
+
+        active:scale-95
+
+        focus:outline-none
+        focus:ring-4
+        focus:ring-[#08B7C9]/20
+      "
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -23,7 +60,22 @@ export default function FloatingChatButton() {
         strokeLinejoin="round"
         className="w-6 h-6"
       >
-        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        <path
+          d="
+            M21 11.5
+            a8.38 8.38 0 0 1-.9 3.8
+            8.5 8.5 0 0 1-7.6 4.7
+            8.38 8.38 0 0 1-3.8-.9
+            L3 21
+            l1.9-5.7
+            a8.38 8.38 0 0 1-.9-3.8
+            8.5 8.5 0 0 1 4.7-7.6
+            8.38 8.38 0 0 1 3.8-.9
+            h.5
+            a8.48 8.48 0 0 1 8 8
+            v.5
+          "
+        />
       </svg>
     </button>
   );
