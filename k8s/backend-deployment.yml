@@ -14,10 +14,15 @@ spec:
       labels:
         app: stage-backend
     spec:
+      hostAliases:
+        - ip: "172.21.0.1"
+          hostnames:
+            - "keycloak"
+
       containers:
         - name: stage-backend
-          image: stage-backend:latest
-          imagePullPolicy: Always
+          image: stage-backend:local-fixed
+          imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:
                 name: backend-config
