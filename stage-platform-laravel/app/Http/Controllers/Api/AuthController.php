@@ -86,7 +86,8 @@ class AuthController extends Controller
             ]);
         }
         $token = $user->createToken('api-token')->plainTextToken;
-        $frontendUrl = 'http://stage-platform.local:5173/auth/callback';
+        $frontendUrl\ = rtrim(env('FRONTEND_URL', 'http://stage-platform.local'), '/') . '/auth/callback';
         return redirect()->away($frontendUrl . '?token=' . $token);
     }
 }
+
