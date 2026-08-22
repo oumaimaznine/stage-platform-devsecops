@@ -326,7 +326,7 @@ export default function Login() {
 
                 {/* KEYCLOAK */}
                 <a
-                  href="http://stage-platform.local:8000/auth/keycloak/redirect"
+                  href="http://stage-platform.local/auth/keycloak/redirect"
                   title="Sign in with Keycloak"
                   className="
                     w-[48px]
@@ -542,3 +542,4 @@ export default function Login() {
     </div>
   );
 }
+
