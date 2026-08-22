@@ -17,7 +17,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(function (SocialiteWasCalled $event) {
-            $event->extendSocialite('keycloak', \SocialiteProviders\Keycloak\Provider::class);
+            $event->extendSocialite('keycloak', \App\Services\CustomKeycloakProvider::class);
         });
     }
 }
+
